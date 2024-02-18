@@ -45,8 +45,9 @@ library(tidyverse)
 library(fabricatr)
 library(randomizr)
 library(estimatr)
-#library(rdddr)  #not available for this version of R
-source("helpers.R") #I found I needed this and it is just loaded into the project
+library(rdss)  #not available for this version of R but from github
+#source("helpers.R") #I found I needed this and it is just loaded into the project
+#remotes::install_github("DeclareDesign/rdss")
 ntab <- 0 #counter for labelling tables
 set.seed(1)
 ```
@@ -95,7 +96,7 @@ gain_t1t2 <- 1 #scores improve by 1 SD on average
 sd_2      <- 1 #we work with random normal deviates, so SD = 1
 rho       <- .57 # correlation between time 1 and time 2 scores, from Table 3 of NFER report
 EffSize   <- -.06 # average treatment effect: from Table 6 of NFER report
-nsims     <- 100 #number of simulations: set to a high number for final run
+nsims     <- 500 #number of simulations: set to a high number for final run
 
 population <- declare_population(
   N = N, 
@@ -133,7 +134,7 @@ estimand <- declare_inquiry(EffSize = mean(Y_t2_Z_1 - Y_t2_Z_0))
 mean_t1 <- declare_inquiry(mean_t1 = mean(Y_t1)) #added to demonstrate use of inquiry for descriptive data
 
 cor12 <- declare_inquiry(cor_t1t2=cor(u_t1,u_t2)) #added to demonstrate use of inquiry for descriptive data
-estimand(mypot) #for explanatory purposes
+#estimand(mypot) #for explanatory purposes
 
 
 ```
@@ -275,26 +276,36 @@ knitr::kable(tabxx,escape = F, align = "c", booktabs = T,caption=tabname) %>%
 
 ```{r plotsims}
 
-# plot simulations
-ggplot(NFER_sims) +
-  geom_histogram(aes(estimate),
-                 bins = 20, fill = "#72B4F3") +
-  geom_vline(aes(xintercept = estimand),
-             lty = "dashed", color = "#C6227F") +
-  facet_grid(rho~EffSize,labeller=label_both) +
-  labs(x = "Estimate", y = "Count of simulations") +
-  ggtitle("NFER method")
 
 
-ggplot(Ahmed_sims) +
-  geom_histogram(aes(estimate),
-                 bins = 20, fill = "#72B4F3") +
-  geom_vline(aes(xintercept = estimand),
-             lty = "dashed", color = "#C6227F") +
-  facet_grid(r_L.u2~EffSize,labeller=label_both) +
-  labs(x = "Estimate", y = "Count of simulations") +
-  ggtitle("Ahmed method: rho = .6")
+Ahmed_sims$sig <-0
+Ahmed_sims$sig[Ahmed_sims$p.value<.05]<-1
+
+NFER_sims$sig <-0
+NFER_sims$sig[NFER_sims$p.value<.05]<-1
+
 
 save(Ahmed_diagnosis,file="Ahmed.RData")
 save(NFER_diagnosis,file="NFER.RData")
+
+# plot simulations
+
+ggplot(Ahmed_sims,aes(estimate)) + 
+    geom_histogram(data=subset(Ahmed_sims,sig == 1),fill = "red", alpha = 0.4) +
+    geom_histogram(data=subset(Ahmed_sims,sig == 0),fill = "blue", alpha = 0.4) +
+    geom_vline(aes(xintercept = estimand),
+             lty = "dashed", color = "#C6227F") +
+    facet_grid(r_L.u2~EffSize,labeller=label_both) +
+  labs(x = "Estimate", y = "Count of simulations") +
+  ggtitle("Ahmed method: rho = .6")
+
+
+ggplot(NFER_sims,aes(estimate)) + 
+    geom_histogram(data=subset(NFER_sims,sig == 1),fill = "red", alpha = 0.4) +
+    geom_histogram(data=subset(NFER_sims,sig == 0),fill = "blue", alpha = 0.4) +
+    geom_vline(aes(xintercept = estimand),
+             lty = "dashed", color = "#C6227F") +
+    facet_grid(rho~EffSize,labeller=label_both) +
+  labs(x = "Estimate", y = "Count of simulations") +
+  ggtitle("NFER method: rho = .6 or .8")
 ```
