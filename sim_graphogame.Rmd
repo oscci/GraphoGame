@@ -3,13 +3,15 @@ title: "Using DeclareDesign to simulate GraphoGame data"
 author: "Dorothy Bishop & Charles Hulme"
 date: "18 Feb 2024"
 output:
-  word_document: default
-  reference_docx: mystyle.docx
   html_document:
     df_print: paged
-editor_options: 
-  markdown: 
+  reference_docx: mystyle.docx
+  word_document: default
+  pdf_document: default
+editor_options:
+  markdown:
     wrap: 72
+    always_allow_html: yes
 ---
 
 # Background  
@@ -136,7 +138,7 @@ estimand(mypot) #for explanatory purposes
 
 ```
 
-If we apply the estimand function to the data frame generated at the Model stage, we get a value of the estimand of `r estimand(mypot)`.  While this is reassuring, it is hardly surprising, since we defined Y_t2_Z_0 and Y_t2_Z_1 as equivalent but with the specified _EffSize_ added to the Y_t2_Z_1 condition. However, in subsequent steps we can consider how the estimand compares with estimates of its value in subsets of simulated data, with differences between the estimand and estimates indicating how much bias there is in the analysis.  In addition, we show in the script how we can use inquiries for descriptive statistics. These are not part of the main pretest_posttest design function, but may be useful when checking the simulation against real data. The value of mean_t1 and cor_t1t2 are likely to differ from expected values of 0 and rho respectively, because they are obtained by sampling cases from a population, and so will vary with each run of the simulation.  In this run of the simulation, mean_t1 is `r mean_t1(mypot)` and cor12 is `r cor12(mypot)`.
+If we apply the estimand function to the data frame generated at the Model stage, we get a value of the estimand of `r estimand(mypot)$estimand`.  While this is reassuring, it is hardly surprising, since we defined Y_t2_Z_0 and Y_t2_Z_1 as equivalent but with the specified _EffSize_ added to the Y_t2_Z_1 condition. However, in subsequent steps we can consider how the estimand compares with estimates of its value in subsets of simulated data, with differences between the estimand and estimates indicating how much bias there is in the analysis.  In addition, we show in the script how we can use inquiries for descriptive statistics. These are not part of the main pretest_posttest design function, but may be useful when checking the simulation against real data. The value of mean_t1 and cor_t1t2 are likely to differ from expected values of 0 and rho respectively, because they are obtained by sampling cases from a population, and so will vary with each run of the simulation.  In this run of the simulation, mean_t1 is `r mean_t1(mypot)$estimand` and cor12 is `r cor12(mypot)$estimand`.
 
 ### Data strategy
 
@@ -253,14 +255,14 @@ Ahmed_design <- population_sel + potential_outcomes +
   myancova_sel #contrasting Ahmed model includes report2 to retain only Top-Half GG
 
 
-designs <- redesign(Ahmed_design,r_L.u2=c(0,.2,.4))
+designs <- redesign(Ahmed_design,r_L.u2=c(0,.2,.4),EffSize=c(-.06,.17))
 Ahmed_diagnosis<-diagnose_designs(designs,sims=nsims)
 Ahmed_sims <- Ahmed_diagnosis$simulations_df #retain the simulations
 
 tabAhmed <- Ahmed_diagnosis$diagnosands_df
 tabxx <- t(tabAhmed)
 ntab<-ntab+1
-tabname<-paste0("Table ",ntab,": Diagnostic results from Ahmed model with correlations between L and u_t2")
+tabname<-paste0("Table ",ntab,": Diagnostic results from Ahmed model at two effect sizes, with different correlations between L and u_t2")
 
 
 knitr::kable(tabxx,escape = F, align = "c", booktabs = T,caption=tabname) %>%
