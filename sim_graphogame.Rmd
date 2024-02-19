@@ -45,6 +45,8 @@ library(tidyverse)
 library(fabricatr)
 library(randomizr)
 library(estimatr)
+library(nlme)
+library(broom)
 library(rdss)  #not available for this version of R but from github
 #source("helpers.R") #I found I needed this and it is just loaded into the project
 #remotes::install_github("DeclareDesign/rdss")
@@ -85,6 +87,8 @@ Further analyses were conducted with subgroups of the Top-Half GG group versus s
 
 DeclareDesign is a suite of functions that allow one to simulate datasets from specified experimental designs and compare the impact of different sampling frames and analytic approaches. DeclareDesign adopts a formal approach to research design, distinguishing between four steps: Model, Inquiry, Data Strategy and Answer strategy (MIDA), which are combined to characterize a design, which can then be evaluated using simulated data. The package includes a Design Library, with R code for simulating common experimental designs (see https://declaredesign.org/r/designlibrary/). We take as our starting point the Pretest Posttest Design (https://declaredesign.org/r/designlibrary/articles/pretest_posttest.html). Although this can be run as a single step with specified parameters, we will walk through each step of code here to illustrate the MIDA approach. A potentially confusing feature of DeclareDesign is that the various 'declare' functions do not compute results, but rather specify new functions. These functions are then combined to create a full design specification.  Here we have added some additional steps to the code to make it possible to inspect what is achieved in different code chunks, and some variable names have been changed to make them more aligned with terminology used in psychology.  
 
+<!--code for DeclareDesign is here: https://dataverse.harvard.edu/file.xhtml?fileId=7017490&version=5.2-->
+
 ### Model  
 
 The model specifies the nature of the sample and observed variables, plus the estimated impact of an experimental manipulation (in this case intervention). For simplicity, we simulate scores as random normal deviates, with SD of 1.  We need to specify the sample size (prior to attrition), N, the correlation between pretest and posttest scores, rho, and the average treatment effect (EffSize). (In DeclareDesign examples, this is referred to as _ate_). In addition, since Worth et al reported general improvement in scores on the reading test from time 1 to time 2 of around 1 SD, regardless of intervention, this is added to time 2 scores.  This code achieves these steps, and we can see the first eight rows of the simulated data table in Table 1. 
@@ -96,7 +100,7 @@ gain_t1t2 <- 1 #scores improve by 1 SD on average
 sd_2      <- 1 #we work with random normal deviates, so SD = 1
 rho       <- .57 # correlation between time 1 and time 2 scores, from Table 3 of NFER report
 EffSize   <- -.06 # average treatment effect: from Table 6 of NFER report
-nsims     <- 500 #number of simulations: set to a high number for final run
+nsims     <- 100 #number of simulations: set to a high number for final run
 
 population <- declare_population(
   N = N, 
@@ -241,10 +245,23 @@ population_sel <- declare_population(N = N,
         L=rnorm(N, r_L.u2 * scale(u_t2), sqrt(1 - r_L.u2^2)) *  sd_2)
 
 pops<-population_sel()
+pops1<-potential_outcomes(pops)
+assignment <- declare_assignment(Z = complete_ra(N))
+pops2<-assignment(pops1) #added just for didactic purposes
+
+attrition_rate<-.09 # from NFER report p 18
+report <- declare_assignment(HasData = complete_ra(N, prob =  1-
+                                               attrition_rate))
+pops3<-report(pops2) #added just for didactic purposes
+reveal_t2 <- declare_reveal(Y_t2)
+pops4<-reveal_t2(pops3)
 report2<-declare_assignment(Exclude = (L<0)&(Z==1))   #TRUE (ie exclude) if treated with below avg on L
+pops5<-report2(pops4)
 
 myancova_sel <- declare_estimator(Y_t2 ~ Z + Y_t1, .method = lm_robust, 
-    inquiry = estimand, subset = (HasData==1 & Exclude==FALSE), label = "Excluding low level group 1")  
+    inquiry = estimand, subset = (HasData==1 & Exclude==FALSE), label = "Excluding low level group 1")
+
+
 
 
 NFER_design <- population + potential_outcomes + 
@@ -285,8 +302,8 @@ NFER_sims$sig <-0
 NFER_sims$sig[NFER_sims$p.value<.05]<-1
 
 
-save(Ahmed_diagnosis,file="Ahmed.RData")
-save(NFER_diagnosis,file="NFER.RData")
+save(Ahmed_diagnosis,file=paste0("Ahmed",nsims,".RData"))
+save(NFER_diagnosis,file=paste0("NFER",nsims,".RData"))
 
 # plot simulations
 
@@ -300,6 +317,8 @@ ggplot(Ahmed_sims,aes(estimate)) +
   ggtitle("Ahmed method: rho = .6")
 
 
+
+
 ggplot(NFER_sims,aes(estimate)) + 
     geom_histogram(data=subset(NFER_sims,sig == 1),fill = "red", alpha = 0.4) +
     geom_histogram(data=subset(NFER_sims,sig == 0),fill = "blue", alpha = 0.4) +
@@ -309,3 +328,83 @@ ggplot(NFER_sims,aes(estimate)) +
   labs(x = "Estimate", y = "Count of simulations") +
   ggtitle("NFER method: rho = .6 or .8")
 ```
+
+## Alternative analysis with 2-way mixed anova 
+
+Rather than the regression analysis with pre-test covariate used in the NFER analysis, Ahmed et al used two-way mixed analysis of variance, with group as a between subjects variable, and time as a repeated measure. We can specify this analysis with DeclareDesign and consider if it affects the bias or sensitivity of the model.  For this analysis, the data must first be reshaped to long form, with a new column, time. We write a function, reshaper, to achieve this.
+
+```{r withAnova}
+
+r_L.u2<- .4 #correlation between R and u_t2
+EffSize <- -.06
+
+population_sel <- declare_population(N = N, 
+        u_t1 = rnorm(N) * sd_1, 
+        u_t2 = gain_t1t2+rnorm(N, rho * scale(u_t1), sqrt(1 - rho^2)) * sd_2, 
+        Y_t1 = u_t1, 
+        L=rnorm(N, r_L.u2 * scale(u_t2), sqrt(1 - r_L.u2^2)) *  sd_2)
+
+pops<-population_sel()
+pops1<-potential_outcomes(pops)
+estimand <- declare_inquiry(EffSize = mean(Y_t2_Z_1 - Y_t2_Z_0))
+assignment <- declare_assignment(Z = complete_ra(N))
+pops2<-assignment(pops1) #added just for didactic purposes
+
+attrition_rate<-.09 # from NFER report p 18
+report <- declare_assignment(HasData = complete_ra(N, prob =  1-
+                                               attrition_rate))
+pops3<-report(pops2) #added just for didactic purposes
+reveal_t2 <- declare_reveal(Y_t2)
+pops4<-reveal_t2(pops3)
+report2<-declare_assignment(Exclude = (L<0)&(Z==1))   #TRUE (ie exclude) if treated with below avg on L
+pops5<-report2(pops4)
+
+
+#convert to long form
+
+reshaper <- 
+  function(data){
+    data |> 
+      gather(key = "time", value = "score", Y_t1, Y_t2) |> 
+      convert_as_factor(ID, time)
+  }
+
+
+myreshape <- declare_assignment(handler=reshaper)
+mypote<-myreshape(pops5)
+
+
+# now run lme
+anova2way <- declare_estimator(score ~ Z * time, random=~time|ID, 
+                               .method = lme, 
+                               .summary=tidy,
+                                term = "Z:timeY_t2",
+                                inquiry = "EffSize",
+                                subset = (HasData == 1 & Exclude==FALSE), 
+                                label = "Interaction: mixed anova")
+
+Ahmed_anova <- population_sel + potential_outcomes + 
+  estimand+ assignment + reveal_t2 + report + report2+ myreshape + 
+  anova2way #
+
+designs <- redesign(Ahmed_anova,r_L.u2=c(0,.2,.4),EffSize=c(0.01,.17))
+Anova_diagnosis<-diagnose_designs(designs,sims=nsims)
+
+save(Anova_diagnosis,file=paste0("Anova",nsims,".RData"))
+
+Ahmed_anova_sims<-Anova_diagnosis$simulations_df
+Ahmed_anova_sims$sig<-0
+Ahmed_anova_sims$sig[Ahmed_anova_sims$p.value<.05]<-1
+
+ggplot(Ahmed_anova_sims,aes(estimate)) + 
+    geom_histogram(data=subset(Ahmed_anova_sims,sig == 1),fill = "red", alpha = 0.4) +
+    geom_histogram(data=subset(Ahmed_anova_sims,sig == 0),fill = "blue", alpha = 0.4) +
+    geom_vline(aes(xintercept = estimand),
+             lty = "dashed", color = "#C6227F") +
+    facet_grid(r_L.u2~EffSize) +
+  labs(x = "Estimate", y = "Count of simulations") +
+  ggtitle("Ahmed anova method: rho = .6")
+
+
+```
+
