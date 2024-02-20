@@ -47,6 +47,10 @@ library(randomizr)
 library(estimatr)
 library(nlme)
 library(broom)
+library(broom.mixed)
+require(rstatix) #for convert_as_factor
+require(reshape2)
+require(ggpubr)
 library(rdss)  #not available for this version of R but from github
 #source("helpers.R") #I found I needed this and it is just loaded into the project
 #remotes::install_github("DeclareDesign/rdss")
@@ -98,8 +102,8 @@ N         <- 398 #full sample size, prior to attrition
 sd_1      <- 1 #we work with random normal deviates, so SD = 1
 gain_t1t2 <- 1 #scores improve by 1 SD on average  
 sd_2      <- 1 #we work with random normal deviates, so SD = 1
-rho       <- .57 # correlation between time 1 and time 2 scores, from Table 3 of NFER report
-EffSize   <- -.06 # average treatment effect: from Table 6 of NFER report
+rho       <- .6 # correlation between time 1 and time 2 scores, from Table 3 of NFER report is .57
+EffSize   <- 0 # average treatment effect: from Table 6 of NFER report is -0.06
 nsims     <- 100 #number of simulations: set to a high number for final run
 
 population <- declare_population(
@@ -208,8 +212,8 @@ NFER_design <- population + potential_outcomes +
 
 # NFER_diagnosis <- diagnose_design(NFER_design,sims=500)
 # NFER_diagnosis
-
-designs <- redesign(NFER_design,EffSize=c(-.06,.17),rho=c(.6,.8))
+#Original power computation used EffSize of .17
+designs <- redesign(NFER_design,EffSize=c(0,.2),rho=c(.6,.8))
 NFER_diagnosis<-diagnose_designs(designs,sims=nsims)
 NFER_sims <- NFER_diagnosis$simulations_df #saves a dataframe of all the simulation runs
 
@@ -236,7 +240,7 @@ We can model this scenario with a new variable, r_L.u2, which represents the cor
 ```{r newparams}
 
 r_L.u2<- .4 #correlation between R and u_t2
-EffSize <- -.06
+EffSize <- 0
 
 population_sel <- declare_population(N = N, 
         u_t1 = rnorm(N) * sd_1, 
@@ -273,7 +277,7 @@ Ahmed_design <- population_sel + potential_outcomes +
   myancova_sel #contrasting Ahmed model includes report2 to retain only Top-Half GG
 
 
-designs <- redesign(Ahmed_design,r_L.u2=c(0,.2,.4),EffSize=c(-.06,.17))
+designs <- redesign(Ahmed_design,r_L.u2=c(0,.2,.4),EffSize=c(0,.2))
 Ahmed_diagnosis<-diagnose_designs(designs,sims=nsims)
 Ahmed_sims <- Ahmed_diagnosis$simulations_df #retain the simulations
 
@@ -291,7 +295,7 @@ knitr::kable(tabxx,escape = F, align = "c", booktabs = T,caption=tabname) %>%
 ```
 
 
-```{r plotsims}
+```{r savesims}
 
 
 
@@ -305,29 +309,9 @@ NFER_sims$sig[NFER_sims$p.value<.05]<-1
 save(Ahmed_diagnosis,file=paste0("Ahmed",nsims,".RData"))
 save(NFER_diagnosis,file=paste0("NFER",nsims,".RData"))
 
-# plot simulations
-
-ggplot(Ahmed_sims,aes(estimate)) + 
-    geom_histogram(data=subset(Ahmed_sims,sig == 1),fill = "red", alpha = 0.4) +
-    geom_histogram(data=subset(Ahmed_sims,sig == 0),fill = "blue", alpha = 0.4) +
-    geom_vline(aes(xintercept = estimand),
-             lty = "dashed", color = "#C6227F") +
-    facet_grid(r_L.u2~EffSize,labeller=label_both) +
-  labs(x = "Estimate", y = "Count of simulations") +
-  ggtitle("Ahmed method: rho = .6")
-
-
-
-
-ggplot(NFER_sims,aes(estimate)) + 
-    geom_histogram(data=subset(NFER_sims,sig == 1),fill = "red", alpha = 0.4) +
-    geom_histogram(data=subset(NFER_sims,sig == 0),fill = "blue", alpha = 0.4) +
-    geom_vline(aes(xintercept = estimand),
-             lty = "dashed", color = "#C6227F") +
-    facet_grid(rho~EffSize,labeller=label_both) +
-  labs(x = "Estimate", y = "Count of simulations") +
-  ggtitle("NFER method: rho = .6 or .8")
 ```
+
+
 
 ## Alternative analysis with 2-way mixed anova 
 
@@ -336,7 +320,7 @@ Rather than the regression analysis with pre-test covariate used in the NFER ana
 ```{r withAnova}
 
 r_L.u2<- .4 #correlation between R and u_t2
-EffSize <- -.06
+EffSize <- 0
 
 population_sel <- declare_population(N = N, 
         u_t1 = rnorm(N) * sd_1, 
@@ -387,7 +371,7 @@ Ahmed_anova <- population_sel + potential_outcomes +
   estimand+ assignment + reveal_t2 + report + report2+ myreshape + 
   anova2way #
 
-designs <- redesign(Ahmed_anova,r_L.u2=c(0,.2,.4),EffSize=c(0.01,.17))
+designs <- redesign(Ahmed_anova,r_L.u2=c(0,.2,.4),EffSize=c(0,.2))
 Anova_diagnosis<-diagnose_designs(designs,sims=nsims)
 
 save(Anova_diagnosis,file=paste0("Anova",nsims,".RData"))
@@ -404,6 +388,80 @@ ggplot(Ahmed_anova_sims,aes(estimate)) +
     facet_grid(r_L.u2~EffSize) +
   labs(x = "Estimate", y = "Count of simulations") +
   ggtitle("Ahmed anova method: rho = .6")
+
+
+```
+
+```{r plotsims}
+# plot simulations
+
+plotsims<-function(myfile,myvar1,myvar2,longvar1,longvar2,mytitle){
+c1<-which(names(myfile)==myvar1)
+c2<-which(names(myfile)==myvar2)
+myfile$myvar1<-paste0(longvar1,myfile[,c1])
+myfile$myvar2<-paste0(longvar2,myfile[,c2])
+mylabs<-c(myvar1,myvar2)
+ggplot(myfile,aes(estimate)) + 
+    geom_histogram(data=subset(myfile,sig == 1),fill = "red", alpha = 0.4) +
+    geom_histogram(data=subset(myfile,sig == 0),fill = "blue", alpha = 0.4) +
+    geom_vline(aes(xintercept = estimand),
+             lty = "dashed", color = "#C6227F") +
+    facet_grid(myvar1~myvar2) +
+  labs(x = "Estimate", y = "Count of simulations") +
+  ggtitle(mytitle)
+}
+```
+
+```{r dofacetplots}
+
+myfile<-NFER_sims
+myvar1<-'rho'
+myvar2<-'EffSize'
+longvar1<-"Pre/post rho: "
+longvar2<-"Intervention effect size: "
+mytitle<-"NFER method: rho = .6 or .8"
+plotNFER<-plotsims(myfile,myvar1,myvar2,longvar1,longvar2,mytitle)
+
+myfile<-Ahmed_sims
+myvar1<-"r_L.u2"
+myvar2<-"EffSize"
+longvar1<-"L/outcome r: "
+longvar2<-"Intervention effect size: "
+
+mytitle <- "Ahmed method: rho = .6"
+plotAhmed<-plotsims(myfile,myvar1,myvar2,longvar1,longvar2,mytitle)
+
+myfile<-Ahmed_anova_sims
+myvar1<-"r_L.u2"
+myvar2<-"EffSize"
+longvar1<-"L/outcome r: "
+longvar2<-"Intervention effect size: "
+mytitle<- "Ahmed anova method: rho = .6"
+plot_Ahmedanova<-plotsims(myfile,myvar1,myvar2,longvar1,longvar2,mytitle)
+
+#For direct comparison of Ahmed regression and anova can combine in one file and facet by method.
+
+mycols<-intersect(names(Ahmed_sims),names(Ahmed_anova_sims))
+allAhmed<-rbind(Ahmed_sims[,mycols],Ahmed_anova_sims[,mycols])
+allAhmed$method='2 x 2 Anova'
+allAhmed$method[allAhmed$estimator=='Excluding low level group 1']<-'Covariate'
+
+myfile<-allAhmed[allAhmed$estimand==0,]
+myvar1<-"r_L.u2"
+myvar2<-"method"
+longvar1<-"L/outcome r: "
+longvar2<-"Analysis: "
+mytitle<- "Ahmed analysis: pre/posttest rho = .6"
+plot_AhmedAll<-plotsims(myfile,myvar1,myvar2,longvar1,longvar2,mytitle)
+ggsave('AhmedAll.png')
+```
+
+Actual EEF data
+
+```{r readeef}
+library(RcmdrMisc) #for reading SPSS .sav files
+filename<-'Total_EEF_data_v096playfileFromMoodleUSETHISONE.sav'
+mydf<- readSPSS(filename)
 
 
 ```
