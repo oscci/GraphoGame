@@ -462,7 +462,119 @@ Actual EEF data
 library(RcmdrMisc) #for reading SPSS .sav files
 filename<-'Total_EEF_data_v096playfileFromMoodleUSETHISONE.sav'
 mydf<- readSPSS(filename)
+#code intervention as 0 or 1
+mydf$GGcode<-0
+mydf$GGcode[mydf$gg_intervention=="GG Rime intervention"]<-1
 
+#just check they all failed phonics screen
+
+table(mydf$phonics_check_score_yr1) #yes; score between 0 and 31.
+#Are those really zero?
+
+plot(mydf$phonics_check_score_yr1,mydf$phonics_check_yr2) #looks sensible
+
+hist(mydf$year1_phonics_check_age_months) #aged 69-81 mo
+
+hist(mydf$age_at_1st_ngrt_months)
+plot(mydf$year1_phonics_check_age_months,mydf$age_at_1st_ngrt_months)
+abline(a=0,b=1)  #one seems in error - phonics check before ngrt
+
+hist(mydf$ngrt_total_43max_rawsc) #presumably the one used in analysis
+
+hist(mydf$age_at_pre_towre_mths)
+plot(mydf$age_at_1st_ngrt_months,mydf$age_at_pre_towre_mths)
+abline(a=0,b=1)  #one seems in error - big discrepancy
+
+plot(mydf$age_at_pre_towre_mths,mydf$age_at_post_towre_mths)
+abline(a=0,b=1) 
+
+hist(mydf$number_gg_play_sessions)
+plot(mydf$number_gg_play_session,mydf$total_levels)
+
+plot(mydf$pre_ngrt_total_raw_score_no_outliers,mydf$post_ngrt_total_raw_score)
+#scores of 1 or 2! not what we wnat
+
+plot(mydf$ngrt_total_43max_rawsc,mydf$post_ngrt_total_rawsc)
+cor(mydf$ngrt_total_43max_rawsc,mydf$post_ngrt_total_rawsc,use="complete.obs")
+#Agrees with EEF report
 
 ```
+
+```{r checkNFER}
+Y_t2<-mydf$post_ngrt_total_rawsc
+Z<-mydf$GGcode
+Y_t1<-mydf$ngrt_total_43max_rawsc
+NFERmodel <- lm_robust(Y_t2 ~ Z + Y_t1)
+summary(NFERmodel)
+EffSize <- NFERmodel$coefficients[2]/sd(Y_t2,na.rm=T)
+
+
+#Repeat this analysis with TOWRE measures
+
+
+Y_t1<-mydf$pre_towre_nonword_rawsc
+Y_t2<-mydf$post_towre_nonword_rawsc
+TOWREphon <- lm_robust(Y_t2 ~ Z + Y_t1)
+summary(TOWREphon)
+EffSize <- TOWREphon$coefficients[2]/sd(Y_t2,na.rm=T)
+
+Y_t1<-mydf$pre_towre_word_rawsc
+Y_t2<-mydf$post_towre_word_rawsc
+TOWREword <- lm_robust(Y_t2 ~ Z + Y_t1)
+summary(TOWREword)
+EffSize <- TOWREword$coefficients[2]/sd(Y_t2,na.rm=T)
+```
+
+Substituting TOWRE for ngwt does not improve matters
+
+```{r redoAhmed}
+table(mydf$GGcode,mydf$progressabovemean)
+
+#But how is this defined?
+plot(mydf$correct_trial_percentage,mydf$progressabovemean) #not by this
+
+
+plot(mydf$median_levels_in_session,mydf$progressabovemean) #all NA
+
+plot(mydf$mean_levels_in_session,mydf$progressabovemean)  #doesn't correspond
+
+plot(mydf$total_levels,mydf$progressabovemean) #related but this isn't it
+
+plot(mydf$highest_assessment_completed,mydf$progressabovemean) 
+plot(mydf$highest_stream_completed,mydf$progressabovemean) 
+#I think it's combination of the last 2?  Highest stream of 16 or more are all coded as above mean; with 15, there are 2 cases coded 1 and 6 cases coded 0
+
+#Analysis with TOWRE nonword
+w<-which(mydf$GGcode==1 & mydf$progressabovemean==0)
+seldf<-mydf[-w,]
+
+seldf$Y_t1<-seldf$pre_towre_nonword_rawsc
+seldf$Y_t2<-seldf$post_towre_nonword_rawsc
+w<-which(is.na(seldf$Y_t2))
+seldf<-seldf[-w,]
+names(seldf)[1]<-'ID'
+thisdf<-reshaper(seldf[,c('ID','GGcode','Y_t1','Y_t2')])
+
+anova_towre_nonword <- lme(score ~ GGcode * time, random=~time|ID,data=thisdf)
+#                    Value Std.Error  DF t-value p-value
+# GGcode:timeY_t2   1.3      0.59     285     2.2   0.027
+
+# Analysis with TOWRE word
+w<-which(mydf$GGcode==1 & mydf$progressabovemean==0)
+seldf<-mydf[-w,]
+
+seldf$Y_t1<-seldf$pre_towre_word_rawsc
+seldf$Y_t2<-seldf$post_towre_word_rawsc
+w<-which(is.na(seldf$Y_t2))
+seldf<-seldf[-w,]
+w<-which(is.na(seldf$Y_t1))
+seldf<-seldf[-w,]
+names(seldf)[1]<-'ID'
+thatdf<-reshaper(seldf[,c('ID','GGcode','Y_t1','Y_t2')])
+
+anova_towre_word <- lme(score ~ GGcode * time, random=~time|ID,data=thatdf)
+#                    Value Std.Error  DF t-value p-value
+
+```
+
 
