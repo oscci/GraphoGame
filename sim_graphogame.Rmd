@@ -51,6 +51,7 @@ library(broom.mixed)
 require(rstatix) #for convert_as_factor
 require(reshape2)
 require(ggpubr)
+library(fishmethods) #for intracluster correlation
 library(rdss)  #not available for this version of R but from github
 #source("helpers.R") #I found I needed this and it is just loaded into the project
 #remotes::install_github("DeclareDesign/rdss")
@@ -105,6 +106,8 @@ sd_2      <- 1 #we work with random normal deviates, so SD = 1
 rho       <- .6 # correlation between time 1 and time 2 scores, from Table 3 of NFER report is .57
 EffSize   <- 0 # average treatment effect: from Table 6 of NFER report is -0.06
 nsims     <- 50 #number of simulations: set to a high number for final run
+
+
 
 population <- declare_population(
   N = N, 
@@ -454,5 +457,61 @@ longvar2<-"Analysis: "
 mytitle<- "Ahmed analysis: pre/posttest rho = .6"
 plot_AhmedAll<-plotsims(myfile,myvar1,myvar2,longvar1,longvar2,mytitle)
 ggsave('AhmedAll.png')
+```
+
+## Modeling classroom as cluster
+
+Empirical data show clustering on pretest NGRT has ICC around .15. 
+We use the empirical distribution of N per class to first allocate a class to each child, and then generate u_t1 to have given ICC for cluster effect.
+
+#To simulate classes need to read original data and look at freqs
+
+```{r makeclustered}
+realdf<-read.csv('EEF_data/pruned_eef.csv') #this has 391 obs, 390 with class
+classfreq<-as.data.frame(table(realdf$class))
+
+myprobs<-as.vector(classfreq$Freq/sum(classfreq$Freq))
+M <-declare_model(
+  id = add_level(
+    N=sum(classfreq$Freq),
+    class = sample(c(1:55),N, prob=myprobs,replace=TRUE)
+  )
+)
+mypop<-M()
+
+M1 <-
+  declare_population(
+                  u_t1 = draw_normal_icc(
+                    mean = 0,
+                    clusters = class,
+                    ICC = 0.15
+                  ),
+                  u_t2 = gain_t1t2+rnorm(N, rho * scale(u_t1), sqrt(1 - rho^2)) * sd_2, 
+                  Y_t1 = u_t1)
+                
+nupop<-M1(mypop)
+
+#check clusterig
+clus.rho(popchar=nupop$u_t1, cluster = nupop$class, type = c(1,2,3), est = 0, nboot = 500)
+
+#The only other thing to fix is the regression equation which needs to now include the classroom as cluster
+lm_pretest_cluster <- declare_estimator(Y_t2 ~ Z + Y_t1, .method = lm_robust, cluster=class,
+                                 inquiry = estimand, subset = HasData == 1, label = "Pretest as covariate, clustered")
+
+```
+
+
+We should now be able to just substitute M and M1 in the design to get clusters
+```{r nuNFER}
+NFER_clustered_design <- M + M1 + potential_outcomes + 
+  estimand + assignment + reveal_t2 + report + 
+  lm_pretest_cluster   
+
+designs <- redesign(NFER_clustered_design,EffSize=c(0,.2),rho=c(.6,.8))
+NFER_clustered_diagnosis<-diagnose_designs(designs,sims=nsims)
+NFER_clustered_sim <- NFER_clustered_diagnosis$simulations_df #saves a dataframe of all the simulation runs
+NFER_clustered_diags<-NFER_clustered_diagnosis$diagnosands_df
+
+
 ```
 

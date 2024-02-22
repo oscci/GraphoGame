@@ -220,7 +220,7 @@ library(lme4)
 Y_t2<-mydf$post_ngrt_total_rawsc
 Z<-mydf$GGcode
 Y_t1<-mydf$ngrt_total_43max_rawsc
-NFERmodelclass <- lmer(Y_t2 ~ Z + Y_t1+(1|classroom), data=mydf)
+NFERmodelclass <- lm_robust(Y_t2 ~ Z + Y_t1, data=mydf)
 summary(NFERmodelclass)
 EffSize <- NFERmodel$coefficients[2]/sd(Y_t2,na.rm=T)
 
@@ -234,15 +234,34 @@ mydf$schoolx<-as.factor(mydf$school)
 myschoolresults<-as.data.frame(describeBy(mydf$post_towre_word_rawsc,group=mydf$schoolx,na.rm=T,mat=T))[,2:6]
 ```
 
-```{r answerstrategyclass}
+```{r runregressions}
+dolm<-function(mydf,y1,y2){
+  w<-which(names(mydf)==y1)
+  mydf$Y_t1<-mydf[,w]
+  w<-which(names(mydf)==y2)
+  mydf$Y_t2<-mydf[,w]
+  lmer_class <- lm_robust(Y_t2 ~ GGcode + Y_t1 ,  clusters=classroom,data=mydf)
 
-lmer_class <- declare_estimator(Y_t2 ~ Z + Y_t1+(1|classroom), .method = lmer, 
-                                 inquiry = estimand, subset = HasData == 1, label = "Pretest as covariate")
-#Note that we use the subset function to restrict analysis to those where HasData = 1
+return(summary(lmer_class))
+}
 
-lmer_class <- declare_estimator(Y_t2 ~ Z + Y_t1+(1|classroom), .method = lmer, 
-                                 inquiry = estimand,  label = "Pretest as covariate")
+
+
+y2<-'post_towre_nonword_rawsc'
+y1<-'pre_towre_nonword_rawsc'
+dolm(mydf,y1,y2)
+
+  #Cluster ICC
+thiscol<-which(names(mydf)==y2)
+
+ clus.rho(popchar=mydf[,thiscol], cluster = mydf$classroom, type = c(1,2,3), est = 0, nboot = 500)
+
 #Version without HasData to apply to real data
+
+y2<-'post_ngrt_total_rawsc'
+y1<-'ngrt_total_43max_rawsc'
+dolm(mydf,y1,y2)
+
 
 # The output of this is same as for Z term with this syntax:
 #  mylm<-lm_robust(Y_t2 ~ Z + Y_t1,mypotd[mypotd$HasData==1,])
@@ -254,4 +273,7 @@ tabname<-paste0("Table ",ntab,": Output from lmer wtih class applied to simulate
 
 knitr::kable(tablmclass,escape = F, align = "c", booktabs = T,caption=tabname) %>%
   kable_styling(c("striped", "bordered"), latex_options = "striped", full_width = F)
+
+
+ 
 ```
