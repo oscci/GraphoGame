@@ -1,0 +1,257 @@
+---
+title: "Original EEF data"
+author: "Dorothy Bishop"
+date: "2024-02-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits=2)
+library(knitr)
+library(kableExtra)
+library(gridExtra)
+library(DeclareDesign)
+library(tidyverse)
+library(fabricatr)
+library(randomizr)
+library(estimatr)
+library(nlme)
+library(broom) #tidy up regression output
+library(broom.mixed)
+require(rstatix) #for convert_as_factor
+require(reshape2) #reshape from wide to long for Anova
+require(ggpubr)
+library(rdss)  #helper functions for DeclareDesign
+library(RcmdrMisc) #for reading SPSS .sav files
+ntab <- 0 #counter for labelling tables
+set.seed(1)
+```
+
+## Actual EEF data
+
+```{r readeef}
+
+#Read data from .sav file and just do some basic checks and save to .csv
+
+filename<-'EEF_data/Total_EEF_data_v096playfileFromMoodleUSETHISONE.sav'
+mydf<- readSPSS(filename)
+
+#rewrite to .csv format for easy reading after removing confidential information
+confidential<-c('dob','any_learning_or_other_issues_identified',	'behaviour_problems',	'adhd',	'health_issues',	'physical_disability',	'asd',	'dyslexia',	'other_diagnosis')
+w<-which(names(mydf) %in% confidential)
+mydf<-mydf[,-w]
+
+#anonymise school
+mydf$school<-as.factor(mydf$school)
+levels(mydf$school)<-1:15
+
+#Examination of ages indicates one where age miscoded at posttest; row 234, excel code 245
+#Shows 19 mo difference between pre and posttest. Either dob miscoded (age 6) or date of testing.  Subsequent analysis of dates suggests this was youngest child, 6 yr at first test. Haven't altered this yet; not sure if it makes any difference to any analyses
+
+write.csv(mydf,'EEF_data/pruned_eef.csv',row.names=F)
+
+#code intervention as 0 or 1
+mydf$GGcode<-0
+mydf$GGcode[mydf$gg_intervention=="GG Rime intervention"]<-1
+
+#just check they all failed phonics screen
+
+table(mydf$phonics_check_score_yr1) #yes; score between 0 and 31.
+#Are those really zero? It seems so
+
+plot(mydf$phonics_check_score_yr1,mydf$phonics_check_yr2) #looks sensible
+
+hist(mydf$year1_phonics_check_age_months) #aged 69-81 mo
+
+hist(mydf$age_at_1st_ngrt_months)
+plot(mydf$year1_phonics_check_age_months,mydf$age_at_1st_ngrt_months)
+abline(a=0,b=1)  #one seems in error - phonics check before ngrt
+
+hist(mydf$ngrt_total_43max_rawsc) #presumably the one used in analysis
+
+hist(mydf$age_at_pre_towre_mths)
+plot(mydf$age_at_1st_ngrt_months,mydf$age_at_pre_towre_mths)
+abline(a=0,b=1)  #one seems in error - big discrepancy
+
+plot(mydf$age_at_pre_towre_mths,mydf$age_at_post_towre_mths)
+abline(a=0,b=1) 
+
+
+hist(mydf$number_gg_play_sessions)
+plot(mydf$number_gg_play_session,mydf$total_levels)
+
+
+plot(mydf$ngrt_total_43max_rawsc,mydf$post_ngrt_total_rawsc)
+cor(mydf$ngrt_total_43max_rawsc,mydf$post_ngrt_total_rawsc,use="complete.obs")
+#Agrees with EEF report
+
+# TOWRE reliability
+towrenonwordr<-cor(mydf$post_towre_nonword_rawsc,mydf$pre_towre_nonword_rawsc,use="complete.obs")
+towrewordr<-cor(mydf$post_towre_word_rawsc,mydf$pre_towre_word_rawsc,use="complete.obs")
+
+plot(mydf$pre_towre_nonword_rawsc,mydf$post_towre_nonword_rawsc,col=(1+mydf$GGcode))
+abline(a=0,b=1,lty=2)
+plot(mydf$pre_towre_word_rawsc,mydf$post_towre_word_rawsc,col=(1+mydf$GGcode))
+abline(a=0,b=1,lty=2)
+
+```
+
+```{r checkNFER}
+Y_t2<-mydf$post_ngrt_total_rawsc
+Z<-mydf$GGcode
+Y_t1<-mydf$ngrt_total_43max_rawsc
+NFERmodel <- lm_robust(Y_t2 ~ Z + Y_t1)
+summary(NFERmodel)
+EffSize <- NFERmodel$coefficients[2]/sd(Y_t2,na.rm=T)
+
+
+#Repeat this analysis with TOWRE measures
+
+
+Y_t1<-mydf$pre_towre_nonword_rawsc
+Y_t2<-mydf$post_towre_nonword_rawsc
+TOWREnonword <- lm_robust(Y_t2 ~ Z + Y_t1)
+summary(TOWREnonword)
+EffSize <- TOWREnonword$coefficients[2]/sd(Y_t2,na.rm=T)
+
+Y_t1<-mydf$pre_towre_word_rawsc
+Y_t2<-mydf$post_towre_word_rawsc
+TOWREword <- lm_robust(Y_t2 ~ Z + Y_t1)
+summary(TOWREword)
+EffSize <- TOWREword$coefficients[2]/sd(Y_t2,na.rm=T)
+```
+
+Substituting TOWRE for ngwt does not improve matters
+
+```{r redoAhmed}
+table(mydf$GGcode,mydf$progressabovemean)
+
+#But how is this defined?
+plot(mydf$correct_trial_percentage,mydf$progressabovemean) #not by this
+
+
+#plot(mydf$median_levels_in_session,mydf$progressabovemean) #all NA
+
+plot(mydf$mean_levels_in_session,mydf$progressabovemean)  #doesn't correspond
+
+plot(mydf$total_levels,mydf$progressabovemean) #related but this isn't it
+
+plot(mydf$highest_assessment_completed,mydf$progressabovemean) 
+plot(mydf$highest_stream_completed,mydf$progressabovemean) 
+#I think it's combination of the last 2?  Highest stream of 16 or more are all coded as above mean; with 15, there are 2 cases coded 1 and 6 cases coded 0
+
+
+#Analysis with TOWRE nonword
+
+#first remove GGgroup cases with 0 on progressabovemean
+w<-which(mydf$GGcode==1 & mydf$progressabovemean==0)
+seldf<-mydf[-w,]
+
+reshaper <- 
+  function(data){
+    data |> 
+      gather(key = "time", value = "score", Y_t1, Y_t2) |> 
+      convert_as_factor(ID, time)
+  }
+
+#Now use same script as DeclareDesign to do repeated measures Anova
+seldf$Y_t1<-seldf$pre_towre_nonword_rawsc
+seldf$Y_t2<-seldf$post_towre_nonword_rawsc
+#remove cases with missing data
+w<-unique(c(which(is.na(seldf$Y_t2)),which(is.na(seldf$Y_t1))))
+seldf<-seldf[-w,]
+
+names(seldf)[1]<-'ID'
+thisdf<-reshaper(seldf[,c('ID','GGcode','Y_t1','Y_t2')])
+
+anova_towre_nonword <- lme(score ~ GGcode * time, random=~time|ID,data=thisdf)
+#                    Value Std.Error  DF t-value p-value
+# GGcode:timeY_t2   1.3      0.59     285     2.2   0.027
+
+
+
+# Analysis with TOWRE word
+w<-which(mydf$GGcode==1 & mydf$progressabovemean==0)
+seldf<-mydf[-w,]
+
+seldf$Y_t1<-seldf$pre_towre_word_rawsc
+seldf$Y_t2<-seldf$post_towre_word_rawsc
+
+w<-unique(c(which(is.na(seldf$Y_t2)),which(is.na(seldf$Y_t1))))
+seldf<-seldf[-w,]
+
+names(seldf)[1]<-'ID'
+thatdf<-reshaper(seldf[,c('ID','GGcode','Y_t1','Y_t2')])
+
+anova_towre_word <- lme(score ~ GGcode * time, random=~time|ID,data=thatdf)
+#                    Value Std.Error  DF t-value p-value
+#GGcode:timeY_t2   0.3      1.04 285     0.3    0.80
+
+#Correlations of highest_stream measure with outcomes
+cor(mydf$highest_stream_completed,mydf$post_towre_word_rawsc,use='complete.obs')
+cor(mydf$highest_stream_completed,mydf$post_towre_nonword_rawsc,use='complete.obs')
+cor(mydf$highest_stream_completed,mydf$post_ngrt_total_rawsc,use='complete.obs')
+
+#Reassuring that age is not related to the outcomes
+cor(mydf$highest_stream_completed,mydf$age_at_post_towre_mths,use='complete.obs')
+cor(mydf$post_towre_nonword_rawsc,mydf$age_at_post_towre_mths,use='complete.obs')
+cor(mydf$post_towre_word_rawsc,mydf$age_at_post_towre_mths,use='complete.obs')
+
+myvars<-c('highest_stream_completed','wisc_blocks_stansc','wisc_sim_rawsc','wisc_dig_rawsc','phonics_check_score_yr1','bpvs_rawsc')
+matbit<-mydf[,myvars]
+cor(matbit,use='complete.obs')
+
+mycols<-168:180
+
+for(c in mycols){
+  x<-mydf[,c]
+  y<-mydf$GGcode
+  print(table(x,y))
+}
+
+plot(mydf$total_active_trial_time,mydf$highest_stream_completed)
+cor(mydf$total_active_trial_time,mydf$highest_stream_completed,use='complete.obs')
+
+mydf$classroom<-as.factor(mydf$class)
+
+library(lme4)
+
+Y_t2<-mydf$post_ngrt_total_rawsc
+Z<-mydf$GGcode
+Y_t1<-mydf$ngrt_total_43max_rawsc
+NFERmodelclass <- lmer(Y_t2 ~ Z + Y_t1+(1|classroom), data=mydf)
+summary(NFERmodelclass)
+EffSize <- NFERmodel$coefficients[2]/sd(Y_t2,na.rm=T)
+
+
+#Look at class differences
+require(psych)
+
+myclassresults<-as.data.frame(describeBy(mydf$post_towre_word_rawsc,group=mydf$classroom,na.rm=T,mat=T))[,2:6]
+
+mydf$schoolx<-as.factor(mydf$school)
+myschoolresults<-as.data.frame(describeBy(mydf$post_towre_word_rawsc,group=mydf$schoolx,na.rm=T,mat=T))[,2:6]
+```
+
+```{r answerstrategyclass}
+
+lmer_class <- declare_estimator(Y_t2 ~ Z + Y_t1+(1|classroom), .method = lmer, 
+                                 inquiry = estimand, subset = HasData == 1, label = "Pretest as covariate")
+#Note that we use the subset function to restrict analysis to those where HasData = 1
+
+lmer_class <- declare_estimator(Y_t2 ~ Z + Y_t1+(1|classroom), .method = lmer, 
+                                 inquiry = estimand,  label = "Pretest as covariate")
+#Version without HasData to apply to real data
+
+# The output of this is same as for Z term with this syntax:
+#  mylm<-lm_robust(Y_t2 ~ Z + Y_t1,mypotd[mypotd$HasData==1,])
+ntab<-ntab+1
+
+tablmclass <- lmer_class(mydf)
+tabname<-paste0("Table ",ntab,": Output from lmer wtih class applied to simulated data")
+
+
+knitr::kable(tablmclass,escape = F, align = "c", booktabs = T,caption=tabname) %>%
+  kable_styling(c("striped", "bordered"), latex_options = "striped", full_width = F)
+```
