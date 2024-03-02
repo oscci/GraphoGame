@@ -125,17 +125,12 @@ The model specifies the nature of the sample and observed variables, plus the es
 
 ```{r loaddiagnoses, echo=FALSE}
 #For demonstration of how script works, set haveresults to zero here.
-#This chunk will preload runs that were created with 10K simulations for all models.
+#Otherwise, later chunks will preload runs that were created with 10K simulations for all models.
 #This saves time if you want to plot or tabulate data from final simulations.
 
 haveresults<-1  #default is zero. 
 #if models have already been run then we load them in rather than rerunning them
 
-  load("simulated_data_10K/Mod2_NFERcl_10000.RData")
-  load("simulated_data_10K/Mod3_NFERdiff_10000.RData")
-  load("simulated_data_10K/Mod4_mult_10000.RData")
-  load("simulated_data_10K/Mod5_Ahmed_10000.RData")
-  load("simulated_data_10K/Mod6_Ahmedmult_10000.RData")
 
 
 ```
@@ -651,7 +646,7 @@ Table `r ntab` shows that the selection of cases based on L_u2 creates upwardly 
 
 In a final set of simulations, we combined models to create simulations that corresponded as closely as possible to Ahmed et al (2020), to consider the extent of bias introduced by the combination of multiple outcomes and participant selection when the null hypothesis was true. In this case, we assume that the correlation between the selection variable and outcome variables is .2.  For each run of this simulation, we select the outcome variable that gives the lowest p-value (from the three outcomes that are considered). Figure 2 shows the estimates of effect size that are obtained when the null hypothesis is true, i.e. the correct value of effect size is zero. 
 
-```{r compareboth}
+```{r compareboth,warning=FALSE}
 #We use Model 2 for NFER simulation
 #For Ahmed we just change name of the variable used to select cases at the report2 step to match the one we simulated in the multivariate case
 report2<-declare_assignment(Exclude = (X.highstream.<0)&(Z==1))   #TRUE (ie exclude) if treated with below avg on the simulated highstream measure (equivalent to L)
@@ -680,6 +675,7 @@ if(haveresults==1){
 }
 Mod6sims <- Mod6_diagnosis$simulations_df #retain the simulations
 
+Mod6sims$sig<-0 #default
 w<-intersect(which(Mod6sims$p.value<.05),which(Mod6sims$estimate>0)) #only consider positive effects
 Mod6sims$sig[w]<-1
  
@@ -725,6 +721,8 @@ It is clear that the combination of using multiple outcomes (model 4) and discar
 
 ```{r plotsims, echo=F}
 # function to plot simulations
+
+# NB originally I used geom_histogram with separate subsets for  sig ==0 and sig==1, but what we really want is the whole distribution plotted first, and then a coloured distribution of significant values overlaid. The current code does that, and the odd code where it says 'subset' but then doesn't give a subset for blue plotted histo is just a hangover from earlier code. 
 
 plotsims<-function(myfile,myvar1,myvar2,longvar1,longvar2,mytitle){
   #Altering names of variables to longvar versions to facilitate labeling
