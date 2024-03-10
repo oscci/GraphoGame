@@ -11,11 +11,13 @@ format:
 editor: visual
 ---
 
-\\\*Dorothy V. M. Bishop\*\^1\^, Charles Hulme\^2\^
+Dorothy V. M. Bishop^1^\* & Charles Hulme^2^
 
-\^1\^ Department of Experimental Psychology, University of Oxford, Anna Watts Building, Woodstock Road, Oxford, OX2 6GG.\\
+^1^ Department of Experimental Psychology, University of Oxford, Anna Watts Building, Woodstock Road, Oxford, OX2 6GG.
 
-\^2\^ Department of Psychology, Health and Professional Development, Oxford Brookes University, Oxford, OX3 0BP.\\ \* Corresponding author, [dorothy.bishop\\\@psy.ox.ac.uk](mailto:dorothy.bishop@psy.ox.ac.uk){.email}
+^2^ Department of Psychology, Health and Professional Development, Oxford Brookes University, Oxford, OX3 0BP.
+
+\*Corresponding author, [dorothy.bishop\@psy.ox.ac.uk](mailto:dorothy.bishop@psy.ox.ac.uk){.email}
 
 ```{=html}
 <!---Online DeclareDesign book
@@ -123,19 +125,19 @@ We created simulated data to illustrate the impact of each of different analytic
 
 For each analysis, we considered statistical power, bias, RMSE and coverage.
 
-## Model specifications and results
+## Design specifications and results
 
-### Model 1. Using DeclareDesign to simulate original analytic model
+### Design 1. Using DeclareDesign to simulate original analysis
 
 We started by simulating data from the original trial, which adopted a fairly standard approach for analysing a Randomised Controlled Trial (Shadish, Cook, & Campbell, 2002), where children were randomly assigned to Intervention or Control groups. ANCOVA (regression) analysis used to estimate the effects of the intervention on a preregistered outcome measure, with a pre-test score used as a covariate.
 
-DeclareDesign disinguishes between four steps: Model, Inquiry, Data Strategy and Answer Strategy (MIDA), which are combined to characterize a design, which can then be evaluated using simulated data. The DeclareDesign package includes a Design Library, with R code for simulating common experimental designs (see <https://declaredesign.org/r/designlibrary/>). We took as our starting point the Pretest Posttest Design (<https://declaredesign.org/r/designlibrary/articles/pretest_posttest.html>), which implements the type of analysis used by Worth et al (2018). Although the simulation can be run as a single step with specified parameters, we will walk through each step of code here to illustrate the MIDA approach. A potentially confusing feature of DeclareDesign is that the various 'declare' functions do not compute results, but rather specify new functions. These functions are then combined to create a full design specification. Here we have added some additional steps to the code to make it possible to inspect what is achieved in the different steps, and some variable names have been changed to make them more aligned with terminology commonly used in psychology.
+DeclareDesign disinguishes between four steps: Model, Inquiry, Data Strategy and Answer Strategy (MIDA), which are combined to characterize a design. This can then be evaluated using simulated data. The DeclareDesign package includes a Design Library, with R code for simulating common experimental designs (see <https://declaredesign.org/r/designlibrary/>). We took as our starting point the Pretest Posttest Design (<https://declaredesign.org/r/designlibrary/articles/pretest_posttest.html>), which implements the type of analysis used by Worth et al. (2018). Although the simulation can be run as a single step with specified parameters, we will walk through each step of code here to illustrate the MIDA approach. A potentially confusing feature of DeclareDesign is that the various 'declare' functions do not compute results, but rather specify new functions. These functions are then combined to create a full design specification. Here we have added some additional steps to the code to make it possible to inspect what is achieved in the different steps, and some variable names have been changed to make them more aligned with terminology commonly used in psychology.
 
 <!--code for DeclareDesign is here: https://dataverse.harvard.edu/file.xhtml?fileId=7017490&version=5.2-->
 
 #### Model
 
-The model specifies the nature of the sample and observed variables, plus the estimated impact of an experimental manipulation (in this case intervention). For simplicity, we simulate scores as random normal deviates, with SD of 1. We need to specify the sample size (prior to attrition), *N*, the correlation between pretest and posttest scores, *rho*, and the intervention effect, *EffSize*. (In DeclareDesign examples, this is referred to as *ate* or *Average Treatment Effect*). In addition, since Worth et al. (2018) reported general improvement in scores on the reading test from time 1 to time 2 of around 1 SD, regardless of intervention, this is added to time 2 scores. This code achieves these steps, and we can see the first eight rows of the simulated data table in Table 1.
+The model specifies the nature of the sample and observed variables, plus the estimated impact of an experimental manipulation (in this case intervention). For simplicity, we simulate scores as normally distributed with a standard deviation of 1. We need to specify the sample size (prior to attrition), *N*, the correlation between pretest and posttest scores, *rho*, and the size of the intervention effect or *EffSize* (In the DeclareDesign examples, this is referred to as *ate* or *Average Treatment Effect*). In addition, since Worth et al. (2018) reported general improvement in scores on the reading test from time 1 to time 2 of around 1 SD, regardless of intervention, this is added to time 2 scores. The Model 1 Specification code achieves these steps. The first eight rows of the resulting simulated data are shown in Table 1.
 
 ```{r loaddiagnoses, echo=FALSE}
 #For demonstration of how script works, set haveresults to zero here.
@@ -150,18 +152,22 @@ haveresults<-1  #default is zero.
 ```
 
 ```{r specifymodel}
+# ------------------------------------------------------
+# DESIGN 1: MODEL SPECIFICATION
+# ------------------------------------------------------
+
 N         <- 398 #full sample size, prior to attrition
 sd_1      <- 1 #we work with random normal deviates, so SD = 1
 gain_t1t2 <- 1 #scores improve by 1 SD on average  
 sd_2      <- 1 #we work with random normal deviates, so SD = 1
-rho       <- .6 # correlation between time 1 and time 2 scores, from Table 3 of NFER report is .57
-EffSize   <- 0 # average treatment effect: from Table 6 of NFER report is -0.06
+rho       <- 0.6 # correlation between time 1 and time 2 scores (Table 3 of NFER report = .57)
+EffSize   <- 0 # average treatment effect (Table 6 of NFER report = -0.06)
 nsims     <- 10 #number of simulations: set to around 50 for testing, but to a high number for final run
 
 population <- declare_population(
   N = N, 
   u_t1 = rnorm(N) * sd_1, 
-  u_t2 = gain_t1t2+rnorm(N, rho * scale(u_t1), sqrt(1 - rho^2)) * sd_2, 
+  u_t2 = gain_t1t2 + rnorm(N, rho * scale(u_t1), sqrt(1 - rho^2)) * sd_2, 
   Y_t1 = u_t1)
 
 mypop <- population() #this step is added just to make output of function visible for explanatory purposes
@@ -171,7 +177,7 @@ mypot <- potential_outcomes(mypop) #this step is added just to make output of fu
 ```
 
 ```{r savetab1, echo=FALSE}
-#Save output in a table
+with the pre#Save output in a table
 demotab<-mypot[1:8,]
 ntab<-ntab+1 #increment table counter
 tabname<-paste0("GGTables/Table ",ntab,"_Simulated potential outcomes for Model 1.csv")
@@ -179,30 +185,34 @@ tabname<-paste0("GGTables/Table ",ntab,"_Simulated potential outcomes for Model 
 write.csv(demotab,tabname,row.names=F)
 
 ftab<-flextable(demotab)
-ftab<- fit_to_width(ftab,8) #convert from table1 to flextable format to allow formatting of width etc
-mycap<-paste0("Table ",ntab,": Simulated potential outcomes for model 1")
+ftab<- fit_to_width(ftab,9) #convert from table1 to flextable format to allow formatting of width etc
+mycap<-paste0("Table ",ntab,": Simulated potential outcomes for Design 1")
 ftab<-set_caption(ftab,mycap)
 ftab
 
 ```
 
-The first function, *population*, generates the first four columns for 398 rows. The first column, *ID*, just identifies each simulated participant by a sequential number. Columns with the prefix u\_ correspond to unobserved latent variables, with u_t1 representing time 1 scores and u_t2 representing time 2 scores. The code specifies that these are drawn from a population where u_1 and u_2 are correlated with correlation *rho*. For the whole dataframe, the mean of u_2 is greater than u_t1 by the value *gain_t1t2*. Columns with the prefix Y\_ correspond to expected values for observed variables. Y_t1 is the same as u_1 and corresponds to the observed pretest value. Although this is redundant, it clarifies the distinction between unobserved, latent variables and observed variables. For Y_t2 there are two values generated, Y_t2_Z_0 and Y_t2_Z_1. These are potential outcomes, depending on whether the case is allocated to the control group (Z_0) or the intervention group (Z_1). The values of Y_t2_Z_0 are the same as values of u_t2, whereas the values of Y_t2_Z_1 correspond to u_t2 plus the value of *EffSize*; thus the averaged treatment effect is added.
-
-Although this may seem a redundant way of simulating what are essentially a pre-test and post-test score with a given level of correlation, it provides both conceptual clarity and analytic flexibility, as will become apparent at subsequent steps.
+The first function, *population*, generates the first four columns for 398 rows. The first column, *ID*, identifies each simulated participant by a sequential number. Columns with the prefix u\_ correspond to unobserved latent variables, with u_t1 representing time 1 scores and u_t2 representing time 2 scores. The code specifies that these are drawn from a population where u_t1 and u_t2 are correlated with correlation *rho*. For the whole dataframe, the mean of u_t2 is greater than u_t1 by the value *gain_t1t2*. Columns with the prefix Y\_ correspond to expected values for observed variables. Y_t1 is the same as u_t1 and corresponds to the observed pretest value. Although this is redundant, it clarifies the distinction between unobserved, latent variables and observed variables. For Y_t2 there are two values generated, Y_t2_Z_0 and Y_t2_Z_1. These are expected observed values at posttest (potential outcomes), depending on whether the case is allocated to the control group (Z_0) or the intervention group (Z_1). The values of Y_t2_Z_0 are the same as values of u_t2, whereas the values of Y_t2_Z_1 correspond to u_t2 plus the value of *EffSize*. That is, Y_t2_Z_1 corresponds to the expected observed value at posttest plus an added component equal to the average treatment effect.
 
 #### Inquiry
 
-The inquiry specifies what parameter we want to estimate from the model - known as the estimand. This could be a descriptive statistic, such as the mean value of a variable, or the difference or correlation between variables. Here we specify the mean difference between intervention and control groups at time 2 as the estimand.
+The inquiry specifies what parameter we want to estimate from the Design - known as the estimand. This could be a descriptive statistic, such as the mean value of a variable, or the difference or correlation between variables. Here we specify the mean difference between intervention and control groups at time 2 as the estimand.
 
 ```{r specifyinquiry}
+# ------------------------------------------------------
+# DESIGN 1: INQUIRY SPECIFICATION
+# ------------------------------------------------------
 estimand <- declare_inquiry(EffSize = mean(Y_t2_Z_1 - Y_t2_Z_0))
 ```
 
-If we apply the estimand function to the data frame generated at the Model stage, we get a value of the estimand of `r estimand(mypot)$estimand`. While this is reassuring, it is hardly surprising, since we defined Y_t2_Z_0 and Y_t2_Z_1 as equivalent but with the specified *EffSize* added to the Y_t2_Z_1 condition. However, in subsequent steps we can consider how the estimand compares with estimates of its value in subsets of simulated data, with differences between the estimand and estimates indicating how much bias there is in the analysis. In addition, we can use inquiries for descriptive statistics.
+If we apply the estimand function to the data frame generated at the Model stage, we get a value of the estimand of `r estimand(mypot)$estimand`. While this is reassuring, it is hardly surprising, since we defined Y_t2_Z_0 and Y_t2_Z_1 as equivalent but with the specified *EffSize* added to the Y_t2_Z_1 condition. However, in subsequent steps we can consider how the estimand compares with estimates of its value in subsets of simulated data, with differences between the estimand and estimates indicating how much bias there is in the analysis. In addition, we can use inquiries for descriptive statistics, as illustrated in the code below.
 
 ```{r otherinquiries}
-mean_t1 <- declare_inquiry(mean_t1 = mean(Y_t1)) #Not used in the model: added to demonstrate use of declare_inquiry for descriptive statistics
-cor12 <- declare_inquiry(cor_t1t2=cor(u_t1,u_t2)) #Not used in the model: added to demonstrate use of declare_inquiry for descriptive statistics
+# ------------------------------------------------------
+# ILLUSTRATION OF OTHER INQUIRIES
+# ------------------------------------------------------
+mean_t1 <- declare_inquiry(mean_t1 = mean(Y_t1)) #Not used in the Design: added to demonstrate use of declare_inquiry for descriptive statistics
+cor12 <- declare_inquiry(cor_t1t2=cor(u_t1,u_t2)) #Not used in the Design: added to demonstrate use of declare_inquiry for descriptive statistics
 
 ```
 
@@ -210,10 +220,12 @@ These are not part of the main pretest_posttest design function, but may be usef
 
 #### Data strategy
 
-The data strategy step selects data for allocation to treatments and for analysis. In the chunk below, we first use declare_assignment to randomly assign cases to 0 (control) or 1 (intervention), and then use it again to specify whether or not the case HasData (using the attrition rate to randomly assign a proportion of cases as HasData = 0). We also make a new column that corresponds to the outcome corresponding to the intervention assignment for each case, and finally, we compute the observed difference (diff_t1t2) between posttest and pretest scores for each row.
+The data strategy step selects data for allocation to treatments and for analysis. In the chunks of code below, we first use *declare_assignment* to randomly assign cases to 0 (control) or 1 (intervention), and then use it again to specify whether or not the case *HasData* (using the attrition rate to randomly assign a proportion of cases as HasData = 0). We also make a new column that corresponds to the outcome corresponding to the intervention assignment for each case, and finally, we compute the observed difference *(diff_t1t2*) between posttest and pretest scores for each row. The first 8 rows of resulting simulated data from this code are shown in Table 2.
 
 ```{r datastrategy}
-
+# ------------------------------------------------------
+# DESIGN 1: DATA STRATEGY
+# ------------------------------------------------------
 assignment <- declare_assignment(Z = complete_ra(N))
 mypota<-assignment(mypot) #added just for didactic purposes
 
@@ -232,40 +244,43 @@ mypotd<-manipulation(mypotc)
 #Save output in a table
 demotab<-mypotd[1:8,]
 ntab<-ntab+1 #increment table counter
-tabname<-paste0("GGTables/Table ",ntab,"_Simulated potential outcomes for Model 1.csv")
+tabname<-paste0("GGTables/Table ",ntab,"_Simulated potential outcomes for Design 1.csv")
 
 write.csv(demotab,tabname,row.names=F)
 
 ftab<-flextable(demotab)
-ftab<- fit_to_width(ftab,8) #convert from table1 to flextable format to allow formatting of width etc
-mycap<-paste0("Table ",ntab,": Simulated data with assignment to intervention for Model 1")
+ftab<- fit_to_width(ftab,10) #convert from table1 to flextable format to allow formatting of width etc
+mycap<-paste0("Table ",ntab,": Simulated data with assignment to intervention for Design 1")
 ftab<-set_caption(ftab,mycap)
 ftab
 
 ```
 
-We can see that our simulated data frame now has additional columns. Column Z indicates whether the individual is assigned to control (0) or intervention (1) condition. *HasData* is 1 for most cases, and 0 for around 9%. The *Y_t2* column is created by selecting *Y_t2_Z_0* where *Z* is 0, and *Y_t2_Z_1* where *Z* is 1. Although potentially we could remove cases where *HasData* = 0 by setting *Y_t2* to NA, this effect is achieved later on, at the Answer step, where we use this variable to specify which data to include. The final column is the observed difference between scores at t2 and t1. The latter is not used for our current analysis, but will feature at a later stage.
+The simulated data frame now has additional columns. Column Z indicates whether the individual is assigned to control (0) or intervention (1) condition. *HasData* is 1 for most cases, and 0 for around 9%. The *Y_t2* column is created by selecting *Y_t2_Z_0* where *Z* is 0, and *Y_t2_Z_1* where *Z* is 1. Although potentially we could remove cases where *HasData* = 0 by setting *Y_t2* to NA, this effect is achieved later on, at the Answer step, where we use this variable to specify which data to include. The final column is the observed difference between scores at t2 and t1. The latter is not used for our current analysis, but will feature at a later stage.
 
 #### Answer strategy
 
-The answer strategy involves first fitting a statistical model to data, and then summarising the model fit. The example of the *pretest_posttest* function in the DeclareDesign vignette compares three different analytic approaches, all implemented in linear models. For now, we will focus just on an analysis corresponding to that adopted in the NFER report; predicting outcome (*Y_t2*) from two variables: treatment group (*Z*) and pretest score (*Y_t1*). The NFER report added classroom as a further covariate, but for this initial demonstration, we will ignore that.
+The answer strategy involves first fitting a statistical model to data, and then summarising the model fit. The example of the *pretest_posttest* function in the DeclareDesign vignette compares three different analytic approaches, all implemented in linear models. For now, we will focus just on an analysis corresponding to that adopted in the Worth et al. (2018) report; predicting outcome (*Y_t2*) from two variables: treatment group (*Z*) and pretest score (*Y_t1*). Worth et al. added classroom as a further covariate, but for this initial demonstration, we will ignore that.
 
 ```{r answerstrategy}
-
+# ------------------------------------------------------
+# DESIGN 1: ANSWER STRATEGY
+# ------------------------------------------------------
 lm_pretest <- declare_estimator(Y_t2 ~ Z + Y_t1, .method = lm_robust, 
                                  inquiry = estimand, subset = HasData == 1, label = "Pretest as covariate")
 
-#Note that we use the subset function to restrict analysis to those where HasData = 1
+#  Note that we use the subset function to restrict analysis to those where HasData == 1
 
-# The output of this is same as for Z term with this syntax:
-#  mylm<-lm_robust(Y_t2 ~ Z + Y_t1,mypotd[mypotd$HasData==1,])
-ntab<-ntab+1
-tablm <- lm_pretest(mypotd)
+#  The output of this is same as for Z term with this syntax:
+#  mylm <- lm_robust(Y_t2 ~ Z + Y_t1,mypotd[mypotd$HasData==1,])
+
+
 ```
 
 ```{r savetab3, echo=FALSE}
 #Save output in a table
 
+tablm <- lm_pretest(mypotd)
 ntab<-ntab+1 #increment table counter
 
 tabname<-paste0("GGTables/Table ",ntab,"_Output from linear model applied to simulated data.csv")
@@ -281,164 +296,181 @@ ftab
 
 Table `r ntab` shows the effect of running the *lm_pretest* function on a single simulated dataset. The 'statistic' here is a t-value that tests the statistical significance of the prediction of outcome from intervention and pre-test score.
 
-To get a reliable estimate of the properties of this design, and the variability around the estimated parameters, we need to run the simulation multiple times. We first create our full design by bolting together the elements of the Model, Inquiry, Data Strategy and Answer Strategy, and then run *diagnose_design* with a specified number of simulations. We can also use the *redesign* function to easily change the values of parameters and rerun the simulation to see the effect. Here we compare results when the true effect size is 0, with the same model when the true effect size is .2. In addition, we consider how varying the test-retest reliability of the outcome measures affects results, by comparing results when *rho* is set to .6 vs .8. This is pertinent to the current example, given that the reliability of the outcome measure used by Worth et al (2018) was lower than predicted.
+To get a reliable estimate of the properties of this design, and the variability around the estimated parameters, we need to run the simulation many times. We first create our full design by bolting together the elements of the Model, Inquiry, Data Strategy and Answer Strategy, and then run *diagnose_design* with a specified number of simulations. We can also use the *redesign* function to easily change the values of parameters and rerun the simulation to see the effect. Here we compare results when the true effect size is 0, with the same Design when the true effect size is .2. In addition, we consider how varying the test-retest correlation between the pretest and posttest measure affects results, by comparing results when *rho* is set to .6 vs .8. This is pertinent to the current example, given that the reliability of the outcome measure used by Worth et al. (2018) was lower than predicted.
 
 ```{r declaredesign,warning=FALSE}
-
+# ------------------------------------------------------
+# DESIGN 1: DECLARE THE DESIGN
+# ------------------------------------------------------
    
-Mod1_NFER <- population + potential_outcomes + 
-  estimand + assignment + reveal_t2 + report + 
+Design1 <- population + potential_outcomes + estimand + assignment + reveal_t2 + report + 
   lm_pretest
 
-#We will compare models with two values of EffSize and two values of rho
+#We will compare Designs with two values of EffSize and two values of rho
 #Original power computation used EffSize of .17, here we select .2
 
-designs <- redesign(Mod1_NFER,EffSize=c(0,.2),rho=c(.6,.8))
+designs <- redesign(Design1, EffSize = c(0,.2), rho = c(.6,.8))
 
-Mod1_NFER_diagnosis<-diagnose_designs(designs, sims=nsims)
-Mod1_NFER_sims <- Mod1_NFER_diagnosis$simulations_df #saves a dataframe of all the simulation runs
+Design1_diagnosis <- diagnose_designs(designs, sims=nsims)
 
-save(Mod1_NFER_diagnosis,file=paste0("simulated_data/Mod1_NFER_",nsims,".RData")) #we save the simulations and diagnosands as R.Data. Nsims as affix to name.
+save(Design1_diagnosis,file=paste0("simulated_data/Design1_",nsims,".RData")) #we save the simulations and diagnosands as R.Data. Nsims saved as affix to name.
 
 ```
 
-```{r savetabMod1diag,echo=FALSE, warning=FALSE}
+```{r savetabDesign1diag,echo=FALSE, warning=FALSE}
 ntab<-ntab+1
 #we use prior simulated data if we have them
 if(haveresults==1){
-  load("simulated_data_10K/Mod1_NFER_10000.RData")
+  load("simulated_data_10K/Design1_10000.RData")
 }
-tabMod1 <- Mod1_NFER_diagnosis$diagnosands_df
-tabname<-paste0("GGTables/Table ",ntab,"_Diagnosis of properties of Model 1 with different values of EffSize and rho.csv")
-write.csv(tabMod1,tabname,row.names=F)
+tabDes1 <- Design1_diagnosis$diagnosands_df
+tabname<-paste0("GGTables/Table ",ntab,"_Diagnosis of properties of Design 1 with different values of EffSize and rho.csv")
+write.csv(tabDes1,tabname,row.names=F)
 
 #simplify table for display
-tabMod1a<-tabMod1[c(1,3,2,4),c(2,3,10,11,16,18,20)]
-ftab<-flextable(tabMod1a)
-ftab<- fit_to_width(ftab,8) #convert from table1 to flextable format to allow formatting of width etc
-mycap<-paste0("Table ",ntab,":  Diagnostic results from Model 1 (NFER) with different parameter settings, 10,000 simulations")
+tabDes1a<-tabDes1[c(1,3,2,4),c(2,3,10,11,16,18,20)]
+ftab<-flextable(tabDes1a)
+ftab<- fit_to_width(ftab,10) #convert from table1 to flextable format to allow formatting of width etc
+mycap<-paste0("Table ",ntab,":  Diagnostic results from Design 1 (NFER) with different parameter settings, 10,000 simulations")
 ftab<-set_caption(ftab,mycap)
 ftab
+nfig <- nfig+1
 ```
 
-The default output from the model diagnosis is complex, and we present here simplified tables that just show the parameters varied in the model, and the mean estimate of intervention effect with its standard error, the RMSE, the proportion of significant results using alpha of .05 (power), and the coverage (probability that the confidence interval contains the true value, referred to as the estimand). An optimal model will give estimates close to the estimand, with RMSE below .1, and coverage around .95. The proportion of significant estimates is labelled as power. Where the true effect size is greater than zero, the power indicates the probability of detecting a genuine effect given the research design. If, however, the true effect size is zero, then this value corresponds to the false positive rate, and is expected to be close to .05 in that case. Figure `r nfig` shows the distribution of estimates from the model with four different parameter settings, and Table `r ntab` shows the corresponding simplified output from the diagnosis. Note that in these simulations, all tests are two-tailed; if we were interested only in positive estimates, the false positive rate would be halved.
+The default output from the model diagnosis is complex, and we present here simplified tables that just show the parameters varied in the Design, and the mean estimate of intervention effect with its standard error, the RMSE, the statistical power, and the coverage (probability that the confidence interval contains the true value). An optimal design will give estimates close to the true value (estimand), with RMSE below .1, and coverage around .95. The proportion of significant estimates is labelled as power. Where the true effect size is greater than zero, power indicates the probability of detecting a genuine effect given the research design. If, however, the true effect size is zero, then this value corresponds to the false positive rate, and is expected to be close to .05 in that case. Figure `r nfig` shows the distribution of estimates from the model after 10,000 runs of each simulation with four different parameter settings, and Table `r ntab` shows the corresponding simplified output from the diagnosis. Note that in these simulations, all tests are two-tailed; if we were interested only in positive estimates, the false positive rate would be halved.
 
 (Figure `r nfig` about here)
 
-*Figure 1*. Simulated distributions of estimated effect size for Model 1, 10,000 simulations. The blue corresponds to nonsignificant estimates, and the purple to estimates where p \< .05. For the null case, where the true intervention effect size is zero, the purple regions correspond to the false positive rate on a two-tailed test.
+*Figure `r nfig`*. Simulated distributions of estimated effect size for Design 1, 10,000 simulations. The blue corresponds to nonsignificant estimates, and the purple to estimates where p \< .05. For the null case, where the true intervention effect size is zero, the purple regions correspond to the false positive rate on a two-tailed test.
 
-### Model 2: Modifying the simulation to incorporate classroom as a cluster
+There are two notable effects shown in Figure `r nfig`. First, the simulated data generate the "true" effect sizes accurately (mean effect sizes of 0.0 and 0.2 as expected). Second an increase in the pretest-posttest correlation does not affect the estimated effect size, but it does increase power (the variability in the estimates of the effect size are smaller when the correlation is higher).
 
-Intervention studies conducted in schools can be affected by clustering, if children within a classroom are more similar than those from different classrooms. Children from 53 classrooms were included in the trial, with an average of 7.5 pupils per class eligible for the trial, and 3.8 pupils per class randomised to receive the intervention. There is much debate about the best way to take such effects into account; West et al (2018) modelled classroom as a fixed effect, so we next modified the simulation to include this variable.
+### Design 2: Modifying the simulation to incorporate classroom as a cluster
 
-The key statistic for any clustering analysis is the intra-cluster correlation (ICC) between the cluster variable and pretest. The empirical data gave an ICC of around .15 with the pretest NGRT score. We use the empirical distribution of N per classroom to first allocate a classroom to each child, and then generate *u_t1* to have given ICC for cluster effect.
+Intervention studies conducted in schools can be affected by clustering, if children within a classroom are more similar to each other than to children from different classrooms.  Typical standard errors and p-values from a regression model are based on the assumption that the residuals in the model across cases are independent from each other.  If children within classrooms are more similar to each other, this violates the assumption of the independence of residuals, and to the extent to which that is true standard errors will be underestimated (and *p*-values over-estimated). Children from 53 classrooms were included in the trial, with an average of 7.5 pupils per class eligible for the trial, and 3.8 pupils per class randomised to receive the intervention. There is much debate about the best way to take such effects into account: Worth et al. (2018) modelled classroom as a fixed effect, so we next modified the simulation to include this variable.
+
+The key statistic for any clustering analysis is the intra-cluster correlation (ICC) between the cluster variable and pretest. We explore the effects of a varying ICC with the pretest NGRT score, with values of .15 and .30. In the simulation, we first allocate a classroom to each child, and then generate *u_t1 (the distribution of the unobserved latent variable representing the pretest scores)* to conform to size of the ICC for classrooms.
 
 ```{r makeclustered}
 
-#----------------------------------------------------------
+# ------------------------------------------------------
+# DESIGN 2: MODEL SPECIFICATION
+# ------------------------------------------------------
 
-actualICC <- .15 #intracluster correlation between cluster and pretest NGRT
-classfreq<-read.csv("classfreq.csv") #N children in each classroom
-
-#classfreq<-read.csv("altclassfreq.csv") #Illustrative example with different cluster characteristics: can uncomment this to look at effect if there were just 4 clusters of roughly equal frequency
-
-allclasses<-unique(classfreq[,1])
-#----------------------------------------------------------
-myprobs<-as.vector(classfreq$Freq/sum(classfreq$Freq)) #probability of allocating child to class
-M <-declare_model(
+# Simulate the number of children in each of 53 classes
+nclasses <- 53
+M <- declare_model(
   id = add_level(
-    N=sum(classfreq$Freq),
-    class = sample(allclasses,N, prob=myprobs,replace=TRUE)
+    N = 398,
+    class = sample(1:nclasses,N,replace=TRUE)
   )
 )
 mypop<-M() #can look at this to see the allocation.
 #Next we need to add variables as before, but u_t1 needs to be clustered with class
 
-Mod2 <-
+
+estICC <- .15 #estimate of intracluster correlation between cluster and pretest NGRT
+# (we vary this later to see the effect)
+
+M2 <-
   declare_population(
                   u_t1 = draw_normal_icc(
                     mean = 0,
                     clusters = class,
-                    ICC = actualICC #value from empirical data
+                    ICC = estICC 
                   ),
-                  u_t2 = gain_t1t2+rnorm(N, rho * scale(u_t1), sqrt(1 - rho^2)) * sd_2, 
+                  u_t2 = gain_t1t2 + rnorm(N, rho * scale(u_t1), sqrt(1 - rho^2)) * sd_2, 
                   Y_t1 = u_t1)
                 
-nupop<-Mod2(mypop)
+nupop<-M2(mypop)
 
 #check clustering - this function from fishmethods confirms we recreated correct ICC
 clusrho <- clus.rho(popchar=nupop$u_t1, cluster = nupop$class, type = 3, est = 0, nboot = 500)
+```
 
+The Inquiry and Data Strategy are the same as for Design 1. We need to modify the Answer Strategy to take clustering into account.
+
+```{r des2ans}
+# ------------------------------------------------------
+# DESIGN 2: ANSWER STRATEGY
+# ------------------------------------------------------
 #Now we modify the regression equation to include the classroom as cluster
-lm_pretest_cluster <- declare_estimator(Y_t2 ~ Z + Y_t1, .method = lm_robust, cluster=class,fixed_effects= ~class,inquiry = estimand, subset = HasData == 1, label = "Pretest as covariate, clustered")
+lm_pretest_cluster <- declare_estimator(Y_t2 ~ Z + Y_t1, .method = lm_robust, cluster=class, fixed_effects= ~class,inquiry = estimand, subset = HasData == 1, label = "Pretest as covariate, clustered")
 
 ```
 
-We can now just substitute M and Mod2 in the design to get clusters
+The design declaration is the same as for Design 1, except we substitute M and M2 in the Model, and use lm_pretest_cluster in the Answer strategy.
 
-```{r Model2NFERcluster,warning=FALSE}
-Mod2_NFER_cl_design <- M + Mod2 + potential_outcomes + 
-  estimand + assignment + reveal_t2 + report + 
-  lm_pretest_cluster   
+```{r Design2NFERcluster,warning=FALSE}
+# ------------------------------------------------------
+# DESIGN 2: DECLARE THE DESIGN
+# ------------------------------------------------------
+Design2 <- M + M2 + potential_outcomes + estimand + assignment + reveal_t2 + report +  lm_pretest_cluster   
 
 #This time we also explore how different values of ICC affect results
-designs <- redesign(Mod2_NFER_cl_design,EffSize=c(0,.2),rho=c(.6,.8),actualICC=c(.15,.3,.45))
-Mod2_NFER_cl_diagnosis<-diagnose_designs(designs,sims=nsims)
-Mod2_NFER_cl_sim <- Mod2_NFER_cl_diagnosis$simulations_df #saves a dataframe of all the simulation runs
-Mod2_NFER_cl_diags<-Mod2_NFER_cl_diagnosis$diagnosands_df
+designs          <- redesign(Design2,EffSize=c(0,.2),rho=c(.6,.8),estICC=c(.15,.3))
+Design2_diagnosis<-diagnose_designs(designs,sims=nsims)
+Design2_sim      <- Design2_diagnosis$simulations_df #saves a dataframe of all the simulation runs
+Design2_diags   <-Design2_diagnosis$diagnosands_df
 
-save(Mod2_NFER_cl_diagnosis,file=paste0("simulated_data/Mod2_NFERcl_",nsims,".RData"))
+save(Design2_diagnosis,file=paste0("simulated_data/Design2_",nsims,".RData"))
 ```
 
-```{r savetabMod2diag,echo=FALSE, warning=FALSE}
+```{r savetabDes2diag,echo=FALSE, warning=FALSE}
 
 
 #we use prior simulated data if we have them
 if(haveresults==1){
-  load("simulated_data_10K/Mod2_NFERcl_10000.RData")
+  load("simulated_data_10K/Des2_NFERcl_10000.RData")
 }
-tabMod2 <- Mod2_NFER_cl_diagnosis$diagnosands_df
+tabDes2 <- Des2_NFER_cl_diagnosis$diagnosands_df
 ntab<-ntab+1
-tabname<-paste0("GGTables/Table ",ntab,"_Diagnosis of properties of Model 2 with different values of EffSize,  rho and ICC.csv")
-write.csv(tabMod2,tabname,row.names=F)
+tabname<-paste0("GGTables/Table ",ntab,"_Diagnosis of properties of Design 2 with different values of EffSize,  rho and ICC.csv")
+write.csv(tabDes2,tabname,row.names=F)
 
 #simplify table for display
-mycols <- c('EffSize','rho','actualICC','mean_estimate','se(mean_estimate)','rmse','power','coverage')
-tabMod2a<-tabMod2[,mycols]
-names(tabMod2a)[3]<-'ICC_cluster'
+mycols <- c('EffSize','rho','estICC','mean_estimate','se(mean_estimate)','rmse','power','coverage')
+tabDes2a<-tabDes2[,mycols]
+names(tabDes2a)[3]<-'ICC_cluster'
 
-tabMod2a<-tabMod2a[with(tabMod2a,order(EffSize,rho,ICC_cluster)),]
+tabDes2a<-tabDes2a[with(tabDes2a,order(EffSize,rho,ICC_cluster)),]
 
-ftab<-flextable(tabMod2a)
+ftab<-flextable(tabDes2a)
 ftab<- fit_to_width(ftab,8) #convert from table1 to flextable format to allow formatting of width etc
 mycap<-paste0("Table ",ntab,":  Diagnosis of properties of Model 2 with different values of EffSize,  rho and ICC")
 ftab<-set_caption(ftab,mycap)
 ftab
 ```
 
-The results in Table `r ntab` confirm that the clustering into classrooms has a negligible effect on the analysis, even when the ICC for clusters level is relatively high. (The script also has an option for exploring the impact of different values for clustering by changing the file that is read in to give class sizes).
+The results in Table `r ntab` confirm that the clustering by classroom has a negligible effect on the analysis, even when the ICC for clusters level is relatively high. It would be simple to explore the impact of different cluster sizes by changing the value of *nclasses* in the model specification.
 
-### Model 3: Comparing repeated measures Anova vs linear regression
+### Design 3: Comparing repeated measures ANOVA with ANCOVA
 
-Ahmed et al (2020) treated pretest and posttest scores as different levels of a dependent variable in a mixed Analysis of Variance, where group was the between-subjects factor and time as the within-subjects factor. The intervention effect is then estimated from the interaction term. Mathematically, this analysis is equivalent to a group comparison of the time 2 vs time 1 difference scores for the two groups. We can therefore readily check the impact of this analytic decision using code that is included in the *pretest_posttest* function in the DeclareDesign vignette. (<https://declaredesign.org/r/designlibrary/articles/pretest_posttest.html>). This time our model includes two alternative analyses of the same simulated data - the original regression with pretest as covariate, and the analysis of difference scores. Note that once the model is set up, it is trivially easy to incorporate this additional comparison in DeclareDesign.
+Ahmed et al. (2020) treated pretest and posttest scores as different levels of a dependent variable in an Analysis of Variance, where group was the between-subjects factor and time was the within-subjects factor. The intervention effect is then estimated from the interaction term. Mathematically, this analysis is equivalent to a group comparison of the time 2 minus time 1 difference scores for the two groups. We can therefore readily check the impact of this analytic decision using code that is included in the *pretest_posttest* function in the DeclareDesign vignette.(<https://declaredesign.org/r/designlibrary/articles/pretest_posttest.html>). This time our Design includes two alternative analyses of the same simulated data - the original regression with pretest as covariate, and the analysis of difference scores. Note that once the Design is set up, it is trivially easy to incorporate this additional comparison in DeclareDesign. The Model, Inqiry and Data Strategy are unchanged; we just add a new term to the Answer Strategy.
 
 ```{r changescore, warning =FALSE}
+# ------------------------------------------------------
+# DESIGN 3: ANSWER STRATEGY
+# ------------------------------------------------------
 changescore <- declare_estimator(diff_t1t2 ~ Z, .method = lm_robust, 
     inquiry = estimand, subset = HasData == 1, label = "Change score")
 
-lm_pretest <- declare_estimator(Y_t2 ~ Z + Y_t1, .method = lm_robust, 
-                                 inquiry = estimand, subset = HasData == 1, label = "Pretest as covariate")
+```
 
-Mod3_diff <- population + potential_outcomes  +
-  estimand + assignment + reveal_t2 + report  + manipulation+
-  lm_pretest+changescore
+The declaration of the design is identical to Design 1, except that we now include two different answer strategies: the original *lm_pretest* (ANCOVA) and the new *changescore* (repeated measures ANOVA). Our diagnosis will then show both methods compared using the same simulated data.
 
-diagnosis <- diagnose_design(Mod3_diff,sims=100)
+```{r declaredes3}
+# ------------------------------------------------------
+# DESIGN 3: DECLARE DESIGN
+# ------------------------------------------------------
+Design3 <- population + potential_outcomes  + estimand + assignment + reveal_t2 + report  + manipulation + lm_pretest + changescore
 
-designs_diff <- redesign(Mod3_diff,EffSize=c(0,.2),rho=c(.6,.8))
-Mod3_diff_diagnosis<-diagnose_designs(designs_diff,sims=nsims)
+diagnosis <- diagnose_design(Design3,sims=nsims)
 
-save(Mod3_diff_diagnosis,file=paste0("simulated_data/Mod3_NFERdiff_",nsims,".RData"))
+designs_diff <- redesign(Design3,EffSize=c(0,.2),rho=c(.6,.8))
+Design3_diagnosis<-diagnose_designs(designs_diff,sims=nsims)
+
+save(Design3_diagnosis,file=paste0("simulated_data/Design3_",nsims,".RData"))
 ```
 
 ```{r savetabMod3diag,echo=FALSE, warning=FALSE}
@@ -448,7 +480,7 @@ if(haveresults==1){
   load("simulated_data_10K/Mod3_NFERdiff_10000.RData")
 }
 tabMod3 <- Mod3_diff_diagnosis$diagnosands_df
-tabname<-paste0("GGTables/Table ",ntab,"_Comparison of linear regression vs repeated measures analysis.csv")
+tabname<-paste0("GGTables/Table ",ntab,"_Comparison of ANCOVA (regression) vs repeated measures (change scores) analysis.csv")
 write.csv(tabMod3,tabname,row.names=F)
 
 #simplify table for display
@@ -462,28 +494,36 @@ ftab
 
 This analysis confirms that precision is greater and power is higher for the regression analysis than for the repeated measures ANOVA when there is a true intervention effect, but the difference is slight.
 
-### Model 4: Including multiple outcomes
+### Design 4: Including multiple outcomes
 
 It is well-established that the false positives will increase if several outcomes are analysed without any statistical correction. Nevertheless, the standard recommendation to have a single outcome measure is not necessarily optimal in educational trials, where there may be a range of outcome measures that might be expected to be influenced by the intervention. . Here we show how DeclareDesign can be used to simulate the situation when there are three correlated outcome measures.
 
-To generate correlated measures in the simulation we created a correlation matrix for three measures taken at both pre- and post-test. The test-retest correlation for each measure is set at .7, the intercorrelation between different measures taken on the same occasion is set at .5, and the intercorrelation between different measures on different occasions is set at .4. We also include a correlation of .2 between all measures and a 'highstream' index, which will be explained when we come to Model 6, but which for now is ignored.
+To generate correlated measures in the simulation we created a correlation matrix for three measures taken at both pre- and post-test. The test-retest correlation for each measure is set at .7, the intercorrelation between different measures taken on the same occasion is set at .5, and the intercorrelation between different measures on different occasions is set at .4. We also include a correlation of .2 between all measures and a 'Level' index, which will be explained when we come to Design 6, but which for now is ignored. We use the *mvrnorm* function from the *MASS* package in R to generate data with the specified correlations.
 
-```{r Model4multivar, warning=FALSE}
+```{r Design4multivar, warning=FALSE}
+# ------------------------------------------------------
+# DESIGN 4: MODEL SPECIFICATION
+# ------------------------------------------------------
+mycors<-read.csv('cormatrix_sim.csv') #correlation matrix for 3 measures on 2 occasions, with test-retest correlation set to .7, intercorrelation between different measures on same occasion set to .5, and intercorrelation between different measures on different occasions set to .4. We also include a Level measure which correlates .2 with all other measures (see later). 
 
-mycors<-read.csv('cormatrix_sim.csv')
 mynames<-mycors[,1]
 mycormat<-as.matrix(mycors[,2:ncol(mycors)])
 Mod4 <-
   declare_model(
-    N = 390,
-    draw_multivariate(c('u_t1a','u_t1b','u_t1c','u_t2a','u_t2b','u_t2c','highstream')~ MASS::mvrnorm(
-      n = 390,
-      mu = c(0,0,0,1,1,1,0), #time 2 reading vars have effect size of 1 added
+    N = 398,
+    draw_multivariate(c('u_t1a','u_t1b','u_t1c','u_t2a','u_t2b','u_t2c','Level')~ MASS::mvrnorm(
+      n = 398,
+      mu = c(0,0,0,1,1,1,0), #time 2 reading outcomes have effect size of 1 added
       Sigma = mycormat)
     ))
-
 mypop <- Mod4() #this step is added just to make output of function visible for explanatory purposes
 #NB mypop names start with X. and end with .
+```
+
+The code for Model, Inquiry, Data Strategy and Answer Strategy for Design 4 from this point is equivalent to that for Design 1, except that we create potential outcomes, estimands, observed outcomes, and estimators separately for each of the three reading variables. (The full code is available on OSF).
+
+```{r moreMod4}
+
 
 #potential outcomes - tried doing this in one command but it did not work, so separate command for each step in sequence
 potential_outcomes_a <- declare_potential_outcomes(Y_t2a ~ X.u_t2a. + EffSize * Z)
@@ -525,131 +565,151 @@ lm_pretest_b <- declare_estimator(Y_t2b ~ Z + X.u_t1b., .method = lm_robust,
                                  inquiry = estimandb, subset = HasData == 1, label = "B_Pretest as cov")
 lm_pretest_c <- declare_estimator(Y_t2c ~ Z + X.u_t1c., .method = lm_robust, 
                                  inquiry = estimandc, subset = HasData == 1, label = "C_Pretest as cov")
+```
 
-Mod4_design <- Mod4 + potential_outcomes_a + potential_outcomes_b + potential_outcomes_c + 
+We then specify Design4, which includes all three variables (here labelled as a, b and c).
+
+```{r Design4design}
+# ------------------------------------------------------
+# DESIGN 4: SPECIFY DESIGN
+# ------------------------------------------------------
+Design4 <- Mod4 + potential_outcomes_a + potential_outcomes_b + potential_outcomes_c + 
   estimanda + estimandb + estimandc + assignment + reveal_t2a + reveal_t2b + reveal_t2c + report + 
-  lm_pretest_a + lm_pretest_b+ lm_pretest_c  
+  lm_pretest_a + lm_pretest_b + lm_pretest_c  
 
-Mod4_designs <- redesign(Mod4_design,EffSize=c(0,.2)) #Here we just look at 2 effect sizes
+Design4_designs <- redesign(Design4,EffSize=c(0,.2)) #Here we just look at 2 effect sizes
 
-Mod4_mult_diagnosis<-diagnose_designs(Mod4_designs,sims=nsims)
-save(Mod4_mult_diagnosis,file=paste0("simulated_data/Mod4_mult_",nsims,".RData"))
+Design4_diagnosis<-diagnose_designs(Design4_designs,sims=nsims)
+save(Design4_diagnosis,file=paste0("simulated_data/Design4_",nsims,".RData"))
+```
+For this model, DeclareDesign yields diagnosands that are similar to those in Design 1. Bias is introduced, however, if the researcher then selects any of the set of outcome measures as evidence for effectiveness. When modeling this situation, we have to decide what kind of selection might be made. Potentially, the researcher might be interested in any result that is statistically significant. However, that seems implausible, because it would include negative as well as positive results. In our simulation, we assume that the researcher selects the largest positive effect size, and disregards results that are opposite to prediction. To extract that information, we extract the simulations that are stored as part of the Diagnosis of Design4, and for each run select the variable giving the most extreme positive result. 
 
+```{r Des4analysis, echo=F}
 if(haveresults==1){
-  load("simulated_data_10K/Mod4_mult_10000.RData")
+  load("simulated_data_10K/Design4_10000.RData")
+  Design4_diagnosis<-Mod4_mult_diagnosis
 }
-Mod4sims <- Mod4_mult_diagnosis$simulations_df #retain the simulations
-#classify results as significant or not
-Mod4sims$sig<-0
-w<-intersect(which(Mod4sims$p.value<.05),which(Mod4sims$estimate>0)) #only consider positive effects
-Mod4sims$sig[w]<-1
- 
-#We count the runs where ANY of outcomes a, b or c is significant
-#Each simulation is identified by sim_id, and there are 6 simulations with that ID; one for each measure and one for each effect size.
- 
-Mod4sigs<-aggregate(Mod4sims$sig,by=list(Mod4sims$sim_ID,Mod4sims$EffSize),FUN=sum)
- 
-Mod4sigstab<-table(Mod4sigs$Group.2,Mod4sigs$x) #table shows how many runs have 0, 1, 2, or 3 sig values
-fprate <- 1-(Mod4sigstab[1,1]/max(Mod4sims$sim_ID)) #just focus on effect size = 0 for false pos
 
-# if we want table of diagnosands, we need to make a new df which just has the most extreme result from each run
-nsimsx<-max(Mod4sims$sim_ID) #make sure we use the correct nsim
+Des4sims <- Design4_diagnosis$simulations_df #retain the simulations
+#classify results as significant or not
+
+
+Des4null<-Des4sims[Des4sims$EffSize==0,] #we are just interested in cases where Null hypothesis is true, to compute in False positive rate
+nsimsx <- max(Des4null$sim_ID)
 
 #make new surrogate simulation df with nsims rows
-newsim4<-Mod4sims[1:nsimsx,] #we will overwrite these values
+newsim4<-Des4null[1:nsimsx,] #we will overwrite these values with var giving largest effect
 
-
-Mod4null<-Mod4sims[Mod4sims$EffSize==0,] #we are just interested in False positive rate
 for (i in 1:nsimsx){
-    w<-which(Mod4null$sim_ID==i) #find rows for this run
-    maxw<-which(Mod4null$estimate[w]==max(Mod4null$estimate[w])) #largest estimate, so one-tailed
-    newsim4[i,]<-Mod4null[w[maxw],]
+    w<-which(Des4null$sim_ID==i) #find rows for this run
+    maxw<-which(Des4null$estimate[w]==max(Des4null$estimate[w])) #largest estimate, so one-tailed
+    newsim4[i,]<-Des4null[w[maxw],]
 }
 
+newsim4$sig <- 0
+wx <- intersect(which(newsim4$p.value<.05),which(newsim4$estimate>0))
+newsim4$sig[wx] <- 1
 wantcols<-c('estimate','sig')
 w<-which(names(newsim4) %in% wantcols)
 newsim4summary<-colMeans(newsim4[,w])
+fprate<-newsim4summary[2]
+ntab <- ntab+1
 
+showtab <- newsim4[1:8,c('sim_ID','inquiry','estimate','std.error','p.value','sig')]
+ftab<-flextable(showtab)
+ftab<- fit_to_width(ftab,8) #convert from table1 to flextable format to allow formatting of width etc
+mycap<-paste0("Table ",ntab,":  Most extreme positive results from the first 8 simulations of Design 4")
+ftab<-set_caption(ftab,mycap)
+ftab
 ```
 
-For this model, DeclareDesign yields diagnosands that are similar to those in Model 1. Bias is introduced, however, if the researcher then selects any of the set of outcome measures as evidence for effectiveness. When modeling this situation, we have to decide what kind of selection might be made. Potentially, the researcher might be interested in any result that is statistically significant. However, that seems implausible, because it would include negative as well as positive results. In our simulation, we assume that the researcher selects the largest positive effect size, and disregards results that are opposite to prediction. Under that assumption, with the correlation structure used here, then the probability of a false positive (i.e., a p-value below .05 on at least one measure) is only slightly inflated, at `r fprate`.
+The first 8 rows of simulation results are shown in Table `r ntab` for the case where the null hypothesis is true (EffSize = 0). The inquiry indicates which of the three measures, a, b, and c, was selected as most extreme. If the three measures were uncorrelated, then each measure would have an independent probability of showing a positive significant effect (p < .05) of .025, and so the estimated false positive rate would be 1 - .976^3, which is equivalent to .07. However, the more highly correlated measures are, the less the false positive rate will be inflated. We can categorise the p-value of the most positive result on each run as either significant (p < .05) or not, to compute the familywise false positive rate. For outcomes with the correlation structure used here, with significance counted only for positive effects, the probability of a false positive (i.e., a p-value below .05 on at least one of three measures) is only slightly inflated, at `r fprate`. 
 
-### Model 5: Modifying the selection of cases to match the Ahmed et al analysis
+### Design 5: Modifying the selection of cases to match the Ahmed et al analyses
 
-It is relatively straightforward to extend the design to represent the selection of of Top-Half GG cases. To do this we create a new latent variable, L, which represents the level reached by players of GraphoGame. This is modeled as a random normal deviate, as for the other latent variables. A critical issue is how far it correlates with u_t2 (the level of the unobserved latent reading ability at time 2). It seems feasible that the children who progress furthest through the game are those that learn fastest. Ahmed et al (2020) assume that this happens because practice on the game causes better reading ability, but this direction of causality cannot be assumed: there are many reasons why some children learn faster than others which could influence both the outcome measure and the rate of progress through the game. It could be that children who learn faster on the game are those with a higher propensity to learn to read well (for reasons not specified); in other words, selecting children based on the level attained on the GG game, may be artifactually selecting children who are going to learn to read best, whatever teaching they receive. Such an effect may have nothing to do with the time spent on GraphoGame. With randomised assignment, we can get a handle on causality, but once we break the randomisation, this is no longer the case. In effect, the selection method adopted by Ahmed et al focuses on children in the intervention group who did well, using a proxy measure (level of game attained) which is not random.
+It is relatively straightforward to extend the design to represent the selection of the Top-Half GG cases as was done by Ahmed et al. (2020). To do this we create a new latent variable, L, which represents the level reached by players of GraphoGame. This is modeled as a random normal deviate, as for the other latent variables. A critical issue is how far it correlates with u_t2 (the level of the unobserved latent reading ability at time 2). It seems  likely that the children who progress furthest through the game are those that learn fastest on GraphoGame, which after all is a measure of learning to read (learning correspondences between letters and groups of letters in printed words, and their pronunciations). Ahmed et al (2020) assume that this happens because practice on the game causes better reading ability, but this direction of causality cannot be assumed: there are many reasons why some children learn faster than others which could influence both the outcome measure and the rate of progress through the game. It could be that children who learn faster on the game are those with a higher propensity to learn to read well (for reasons not specified); in other words, selecting children based on the level attained on the GG game, may be artifactually selecting children who are going to learn to read best, whatever teaching they receive. Such an effect may have nothing to do with the time spent on GraphoGame. With randomised assignment, we can get a handle on causality, but once we break the randomisation, this is no longer the case. In effect, the selection method adopted by Ahmed et al focuses on children in the intervention group who did well, using a proxy measure (level of game attained) which is not random.
 
-We can model this scenario with a new variable, r_L.u2, which represents the correlation between L (the Level reached on GraphoGame) and u_t2 (the unobserved latent reading ability at time 2). Then we simply need to specify that for those where Z = 1 (i.e. the intervention group), we drop any cases where L is less than zero (i.e. below average). The next chunk of code performs these steps. We start by assuming r_L.u2 = .2, and modify the *population* statement to add the new latent term, L.
+We can model this scenario with a new variable, r_L.u2, which represents the correlation between L (the Level reached on GraphoGame) and u_t2 (the unobserved latent reading ability at time 2). 
 
-```{r doModel5,  warning=F}
 
-r_L.u2<- .2 #correlation between R and u_t2
+```{r Design5model,  warning=F}
+# ------------------------------------------------------
+# DESIGN 5: SPECIFY MODEL
+# ------------------------------------------------------
+r_L.u2<- .2 #correlation between Level attained and outcome (u_t2)
 EffSize <- 0
 
 population_sel <- declare_population(N = N, 
         u_t1 = rnorm(N) * sd_1, 
-        u_t2 = gain_t1t2+rnorm(N, rho * scale(u_t1), sqrt(1 - rho^2)) * sd_2, 
+        u_t2 = gain_t1t2 + rnorm(N, rho * scale(u_t1), sqrt(1 - rho^2)) * sd_2, 
         Y_t1 = u_t1, 
-        L=rnorm(N, r_L.u2 * scale(u_t2), sqrt(1 - r_L.u2^2)) *  sd_2)
+        L = rnorm(N, r_L.u2 * scale(u_t2), sqrt(1 - r_L.u2^2)) *  sd_2)
 
-pops<-population_sel()
-pops1<-potential_outcomes(pops)
-assignment <- declare_assignment(Z = complete_ra(N))
-pops2<-assignment(pops1) #added just for didactic purposes
+```
+We then need to add a new *declare_assignment* step to the Data Strategy which selects which participants will be excluded. Because L is a random normal deviate, and children are excluded if they are below average on the Level variable, then we can just exclude those in the intervention group who have a value of L below zero. 
 
-attrition_rate<-.09 # from NFER report p 18
-report <- declare_assignment(HasData = complete_ra(N, prob =  1-
-                                               attrition_rate))
-pops3<-report(pops2) #added just for didactic purposes
-reveal_t2 <- declare_reveal(Y_t2)
-pops4<-reveal_t2(pops3)
-report2<-declare_assignment(Exclude = (L<0)&(Z==1))   #TRUE (ie exclude) if treated with below avg on L
-pops5<-report2(pops4)
-
-myancova_sel <- declare_estimator(Y_t2 ~ Z + Y_t1, .method = lm_robust, 
-    inquiry = estimand, subset = (HasData==1 & Exclude==FALSE), label = "Excluding low level group 1")
-
-
-
-Mod5_Ahmed <- population_sel + potential_outcomes + 
-  estimand + assignment + reveal_t2 + report + report2+
-  myancova_sel #contrasting Ahmed model includes report2 to retain only Top-Half GG
-
-
-designs <- redesign(Mod5_Ahmed,r_L.u2=c(0,.2,.4),EffSize=c(0,.2))
-Mod5_Ahmed_diagnosis<-diagnose_designs(designs,sims=nsims)
-save(Mod5_Ahmed_diagnosis,file=paste0("simulated_data/Mod5_Ahmed_",nsims,".RData"))
+```{r Design5exclude,  warning=F}
+# ------------------------------------------------------
+# DESIGN 5: SPECIFY EXCLUSIONS
+# ------------------------------------------------------
+report2 <- declare_assignment(Exclude = (L <0 ) & (Z == 1))   #TRUE (ie exclude) if in intervention group with below avg value on L
 
 ```
 
-```{r savetabMod5diag,echo=FALSE, warning=FALSE}
+Finally, we need to modify the Answer Strategy to include the new exclusion.  We name this new answer myancova_sel, to denote that it is an ancova with selection
+
+```{r Design5answer,  warning=F}
+# ------------------------------------------------------
+# DESIGN 5: SPECIFY ANSWER
+# ------------------------------------------------------
+
+ancova_sel <- declare_estimator(Y_t2 ~ Z + Y_t1, .method = lm_robust, 
+    inquiry = estimand, subset = (HasData==1 & Exclude==FALSE), label = "Excluding low level group 1")
+
+```
+The Model 5 declaration differs from Model 1 in terms of the initial *population_sel* declaration, in the inclusion of the *report2* declaration, which defines the exclusion criteria, and in the use of *ancova_sel* in the answer. All other declarations are carried over from Model 1.
+
+```{r Design5declaration, warning=F}
+Design5 <- population_sel + potential_outcomes + 
+  estimand + assignment + reveal_t2 + report + report2+
+  ancova_sel # model based on Ahmed et al includes report2 to retain only Top-Half GG
+
+designs <- redesign(Design5,r_L.u2=c(0,.2,.4),EffSize=c(0,.2))
+Design5_diagnosis<-diagnose_designs(designs,sims=nsims)
+save(Design5_diagnosis,file=paste0("simulated_data/Design5_",nsims,".RData"))
+
+```
+
+ 
+```{r Design5diag,echo=FALSE, warning=FALSE}
 ntab<-ntab+1
 #we use prior simulated data if we have them
 if(haveresults==1){
-  load("simulated_data_10K/Mod5_Ahmed_10000.RData")
+  load("simulated_data_10K/Design5_10000.RData")
 }
-tabMod5 <- Mod5_Ahmed_diagnosis$diagnosands_df
-tabname<-paste0("GGTables/Table ",ntab,"_Diagnostic results from Ahmed model at two effect sizes, with different correlations between L and u_t2.csv")
-write.csv(tabMod5,tabname,row.names=F)
+tabDes5 <- Design5_diagnosis$diagnosands_df
+tabname<-paste0("GGTables/Table ",ntab,"_Diagnostic results from Design 5 at two effect sizes, with different correlations between L and u_t2.csv")
+write.csv(tabDes5,tabname,row.names=F)
 
 #simplify table for display
-tabMod5a<-tabMod5[,c(2,3,10,11,16,18,20)]
-ftab<-flextable(tabMod5a)
+tabDes5a<-tabDes5[,c(2,3,10,11,16,18,20)]
+ftab<-flextable(tabDes5a)
 ftab<- fit_to_width(ftab,8) #convert from table1 to flextable format to allow formatting of width etc
-mycap<-paste0("Table ",ntab,":  Diagnostic results from Ahmed model at two effect sizes, with different correlations between L and u_t2")
+mycap<-paste0("Table ",ntab,":  Diagnostic results from Design 5 at two effect sizes, with different correlations between L and u_t2")
 ftab<-set_caption(ftab,mycap)
 ftab
 ```
 
 Table `r ntab` shows that the selection of cases based on L_u2 creates upwardly biased estimates of the intervention effect. When the null hypothesis is true, the estimates of effect size are .10 and .20 if correlation with the selection measure is .2 or .4 respectively. Note that when the null is true, then 'power' indicates the false positive rate, which should be around .05. The simulated data give values of .17 and .53 when the correlation with selection variable is .2 or .4 respectively. Note also that the power estimates for the real effect of .2 are misleading, because they suggest a strong design, but when we look at the coverage statistic, we see that the estimates are very poor indicators of the true effect.
 
-### Model 6: Combining models 4 and 5
+### Model 6: Combining Designs 4 and 5
 
-In a final set of simulations, we combined models to create simulations that corresponded as closely as possible to Ahmed et al (2020), to consider the extent of bias introduced by the combination of multiple outcomes and participant selection when the null hypothesis was true. In this case, we assume that the correlation between the selection variable and outcome variables is .2. For each run of this simulation, we select the outcome variable that gives the largest effect size (from the three outcomes that are considered). Figure 2 shows the estimates of effect size that are obtained when the null hypothesis is true, i.e. the correct value of effect size is zero.
+In a final set of simulations, we combined Designs 4 and 5 to create simulations that corresponded as closely as possible to Ahmed et al. (2020), to consider the extent of bias introduced by the combination of multiple outcomes and participant selection when the null hypothesis was true. In this case, we assume that the correlation between the selection variable and outcome variables is .2. For each run of this simulation, we select the outcome variable that gives the largest effect size (from the three outcomes that are considered). Figure 2 shows the estimates of effect size that are obtained when the null hypothesis is true, i.e. the correct value of effect size is zero.
 
 ```{r compareboth,warning=FALSE}
-#We use Model 2 for NFER simulation
+#We use Design 2 for NFER simulation
 #For Ahmed we just change name of the variable used to select cases at the report2 step to match the one we simulated in the multivariate case
-report2<-declare_assignment(Exclude = (X.highstream.<0)&(Z==1))   #TRUE (ie exclude) if treated with below avg on the simulated highstream measure (equivalent to L)
+report2<-declare_assignment(Exclude = (X.Level.<0)&(Z==1))   #TRUE (ie exclude) if treated with below avg on the simulated Level measure (equivalent to L)
 ancovasel_a <- declare_estimator(Y_t2a ~ Z + X.u_t1a., .method = lm_robust, 
                                  inquiry = estimanda, subset = (HasData==1 & Exclude==FALSE), label = "Acov_sela")
 ancovasel_b <- declare_estimator(Y_t2b ~ Z + X.u_t1b., .method = lm_robust, 
@@ -660,9 +720,9 @@ ancovasel_c <- declare_estimator(Y_t2c ~ Z + X.u_t1c., .method = lm_robust,
 Mod6_Ahmed <- Mod4 + potential_outcomes_a + potential_outcomes_b + potential_outcomes_c + 
   estimanda + estimandb + estimandc + assignment + reveal_t2a + reveal_t2b + reveal_t2c + report + report2+ ancovasel_a + ancovasel_b + ancovasel_c
 
-#NB the value of rho is determined by the correlation matrix used in Mod4, so not needed for the model
+#NB the value of rho is determined by the correlation matrix used in Mod4, so not needed for the Design
 
-Mod6_designs <- redesign(Mod6_Ahmed,EffSize=c(0)) #just focus on null model
+Mod6_designs <- redesign(Mod6_Ahmed,EffSize=c(0)) #just focus on null Design
 
 Mod6_diagnosis<-diagnose_designs(Mod6_designs,sims=nsims)
 save(Mod6_diagnosis,file=paste0("simulated_data/Mod6_Ahmedmult_",nsims,".RData"))
@@ -670,7 +730,7 @@ save(Mod6_diagnosis,file=paste0("simulated_data/Mod6_Ahmedmult_",nsims,".RData")
 
 if(haveresults==1){
 
-  load("simulated_data_10K/Mod2_NFERcl_10000.RData")
+  load("simulated_data_10K/Des2_NFERcl_10000.RData")
    load("simulated_data_10K/Mod6_Ahmedmult_10000.RData")
 }
 Mod6sims <- Mod6_diagnosis$simulations_df #retain the simulations
@@ -688,7 +748,7 @@ Mod6sigstab<-table(Mod6sigs$Group.2,Mod6sigs$x)
 Mod6_fprate <- 1-Mod6sigstab[1,1]/max(Mod6sims$sim_ID)
 
 
-#for plotting comparison with Model 2, select the variable in Model 6 in each simulation with max estimated effect
+#for plotting comparison with Design 2, select the variable in Model 6 in each simulation with max estimated effect
 
 nsimsx<-max(Mod6sims$sim_ID)
 #make new surrogate simulation df with nsims rows
@@ -699,9 +759,9 @@ for (i in 1:nsimsx){
     newsim6[i,]<-Mod6sims[w[thismax],]
 }
 
-Mod2_NFER_cl_sim<-Mod2_NFER_cl_diagnosis$simulations_df
-newsim2<-filter(Mod2_NFER_cl_sim,rho==.6,actualICC==.15,EffSize==0)
-w<-which(names(newsim2) %in% c('rho','actualICC'))
+Des2_NFER_cl_sim<-Des2_NFER_cl_diagnosis$simulations_df
+newsim2<-filter(Des2_NFER_cl_sim,rho==.6,estICC==.15,EffSize==0)
+w<-which(names(newsim2) %in% c('rho','estICC'))
 newsim2<-newsim2[,-w]
 newsim2$sig<-0
 newsim2$sig[newsim2$p.value<.05]<-1
@@ -778,7 +838,7 @@ return(myg)
 
 ```{r makefirstfig, echo=FALSE,warning=FALSE}
 # 
-myfile<-Mod1_NFER_diagnosis$simulations_df
+myfile<-Design1_diagnosis$simulations_df
 #add flag to show which are significant
 myfile$sig<-0
 myfile$sig[myfile$p.value<.05]<-1
