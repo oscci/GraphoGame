@@ -19,6 +19,7 @@ Dorothy V. M. Bishop^1^\* & Charles Hulme^2^
 \*Corresponding author, [dorothy.bishop\@psy.ox.ac.uk](mailto:dorothy.bishop@psy.ox.ac.uk){.email}
 
 ```{=html}
+<!--- Script by D V M Bishop, 13th March 2024-->
 <!---Online DeclareDesign book
 https://book.declaredesign.org/declaration-diagnosis-redesign/declaration-in-code.html
 
@@ -58,7 +59,7 @@ set.seed(1)
 #This saves time if you want to plot or tabulate data from final simulations.
 
 haveresults<-1  #default is zero. 
-#if models have already been run then we load them in rather than rerunning them
+#if models have already been run then we load them in rather than rerunning them when creating tables and figures
 
 nsims     <- 50 #number of simulations: set to around 50 for testing, but to a high number for final run
 #If knitting file, and haveresults is set to 1, can specify v low number
@@ -71,20 +72,20 @@ Recent studies in psychology have documented how analytic flexibility can result
 
 # Alternative analyses: different conclusions
 
-There are several studies in the social sciences that show that different researchers analysing the same data can come to different conclusions. Among the reasons for discrepancies are differences in specification of the research question (Kummerfeld & Jones, 2023), but even when a question is clearly defined, differences can emerge because of analytic decisions (e.g., Silberzahn et al., 2018; Schweinsberg et al., 2021). Bishop and Thompson (2024) noted that a good research design should minimize the impact of random noise on our estimates, while avoiding methodological choices that can introduce systematic bias. Most researchers will attempt to address these issues by following well-established methods, but it is rare to see any systematic attempt to compare analytic approaches at the point of planning a study.
+There are several studies in the social sciences that show that different researchers analysing the same data can come to different conclusions. Among the reasons for discrepancies are differences in specification of the research question (Kummerfeld & Jones, 2023), but even when a question is clearly defined, differences can emerge because of analytic decisions (e.g., Silberzahn et al., 2018; Schweinsberg et al., 2021). Bishop and Thompson (2024) noted that a good research design should minimize the impact of random noise on estimates, while avoiding methodological choices that can introduce systematic bias. Most researchers will attempt to address these issues by following well-established methods, but it is rare to see any systematic attempt to compare analytic approaches at the point of planning a study.
 
 DeclareDesign is a suite of functions that allows one to simulate datasets from specified experimental designs and compare the effects of different sampling frames and analytic approaches (Blair, Coppock & Humphreys, 2023; <https://declaredesign.org/>). DeclareDesign was developed in the field of political science but is not widely known outside that field, despite its considerable benefits for researchers and policymakers. Simulations allow us to create datasets where the true values of estimated parameters are known, and then see how well those values are recovered in an analysis.
 
-DeclareDesign adopts a formal approach to research design, distinguishing between four steps: Model, Inquiry, Data Strategy and Answer strategy (MIDA), which are combined to characterise a design, which can then be evaluated using simulated data. Blair, Cooper, Coppock and Humphreys (2019) noted that although simulated data is often used to estimate the statistical power of a design, it is seldom used to evaluate other properties of interest, known as "diagnosands", such as precision of estimates (as reflected in the root-mean-squared-error or RMSE), and bias (systematic differences between estimates and true values). Another index, coverage, combines aspects of precision and bias, reflecting the probability that the confidence interval around an estimate contains the true value. A useful feature of the package is that once a research design has been formally specified, it is easy to manipulate parameters to see the impact on statistical power, precision, bias, and other diagnosands for a proposed study. It has a modular structure that also makes it easy to create new designs by combining features of old designs.
+DeclareDesign adopts a formal approach to research design, distinguishing between four steps: Model, Inquiry, Data Strategy and Answer Strategy (MIDA), which are combined to characterise a design, which can then be evaluated using simulated data. Blair, Cooper, Coppock and Humphreys (2019) noted that although simulated data is often used to estimate the statistical power of a design, it is seldom used to evaluate other properties of interest, known as "diagnosands", such as precision of estimates (as reflected in the root-mean-squared-error or RMSE), and bias (systematic differences between estimates and true values). Another index, coverage, combines aspects of precision and bias, reflecting the probability that the confidence interval around an estimate contains the true value. A useful feature of the package is that once a research design has been formally specified, it is easy to manipulate parameters to see the impact on statistical power, precision, bias, and other diagnosands for a proposed study. It has a modular structure that also makes it easy to create new designs by combining features of old designs.
 
 In this article we illustrate how DeclareDesign can be used to compare different approaches to analysing data from an intervention trial. We take as a case study recent work evaluating results from a large randomised controlled trial (RCT) on the effectiveness of GraphoGame Rime (<https://graphogame.com>), a computer-based game designed to improve children's reading (see Goswami & East, 2000).  This example is pertinent because there are published analyses of the RCT that come to contradictory conclusions. 
 
-The Graphogame RCT was funded jointly by the Wellcome Trust and the Education Endowment Foundation (EEF), as part of a scheme to develop collaborative intervention research between educators and neuroscientists. This trial, registered at <http://www.isrctn.com/ISRCTN10467450>, selected poor readers who were randomly assigned within classrooms to GraphoGame Rime or a Business as Usual control group.  EEF projects undergo independent evaluation by researchers who are not involved in obtaining the funding. Details of the original RCT are provided in the report by independent evaluators from the National Foundation for Educational Research (NFER: Worth et al., 2018). The conclusion from this independently conducted evaluation was stark: *"The trial found no evidence that GraphoGame Rime improves pupils' reading or spelling test scores when compared to business-as-usual. This result has very high security"*. The high security rating refers to the Education Endowment Foundation's rating of the methodological quality of this randomised trial. A reanalysis was conducted by researchers at the University of Cambridge, who had developed the English version of Graphogame Rime, and who had obtained the funding for the study. The Cambridge analysis concluded that *"The current study suggests that young learners of the English orthography show significant benefits in learning both phonic decoding skills and spelling skills from the supplementary use of GG Rime in addition to ongoing classroom literacy instruction."* (Ahmed et al., 2020). Those considering using Graphogame will find it confusing that such diametrically opposed conclusions can be drawn from analysis of the same dataset. Here we show how modeling the contrasting analytic approaches can clarify the sources of disagreement.
+The Graphogame RCT was funded jointly by the Wellcome Trust and the Education Endowment Foundation (EEF), as part of a scheme to develop collaborative intervention research between educators and neuroscientists. This trial, registered at <http://www.isrctn.com/ISRCTN10467450>, selected poor readers who were randomly assigned within classrooms to GraphoGame Rime or a Business as Usual control group.  EEF projects undergo independent evaluation by researchers who are not involved in obtaining the funding. Details of the original RCT are provided in the report by independent evaluators from the National Foundation for Educational Research (NFER: Worth et al., 2018). The conclusion from this independently conducted evaluation was stark: *"The trial found no evidence that GraphoGame Rime improves pupils' reading or spelling test scores when compared to business-as-usual. This result has very high security"*. The high security rating refers to the EEF's rating of the methodological quality of this randomised trial. A reanalysis was conducted by researchers at the University of Cambridge, who had developed the English version of Graphogame Rime, and who had obtained the funding for the study. The Cambridge analysis concluded that *"The current study suggests that young learners of the English orthography show significant benefits in learning both phonic decoding skills and spelling skills from the supplementary use of GG Rime in addition to ongoing classroom literacy instruction."* (Ahmed et al., 2020). Those considering using Graphogame will find it confusing that such diametrically opposed conclusions can be drawn from analysis of the same dataset. Here we show how modeling the contrasting analytic approaches can clarify the sources of disagreement.
 
 
 ## Methods
 
-We simulated six different designs to illustrate the impact of each of different analytic choices, using the DeclareDesign package (Blair, Coppock, & Humphreys, 2023) in the R computing language (R Core Team, 2023). The simulated designs demonstrated the impact of five features of the designs used by NFER and the Cambridge group:
+We simulated six different designs to illustrate the impact of different analytic choices, using the DeclareDesign package (Blair, Coppock, & Humphreys, 2023) in the R computing language (R Core Team, 2023). The simulated designs demonstrated the impact of five features of the designs used by NFER and the Cambridge group:
 
 1)  *Pretest-posttest correlations of outcome measures*. The NFER analysis used a preregistered outcome measure, the New Group Reading Test (NGRT). The test-retest reliability of this measure, as reflected in pretest-posttest correlations was lower (.57) than anticipated (.8). In Design 1, we introduce DeclareDesign with the basic design used by the NFER evaluators, and show how simulations can be easily generated to quantify the impact of pretest-posttest correlation on effectiveness of the design to estimate the intervention effect.
 
@@ -103,7 +104,7 @@ For each analysis, we considered the diagnosands statistical power, bias, RMSE a
 
 ## Design 1. Simulation of original analysis, with variable correlations between pretest and posttest measures
 
-We started by simulating data from the original trial, which adopted a standard approach for analysing a Randomised Controlled Trial (Shadish, Cook, & Campbell, 2002), where children were randomly assigned to Intervention or Control groups. GraphoGame Rime (GG) intervention was compared with business-as-usual in a sample of 398 Year 2 pupils from 15 primary schools. All participants were selected as having low literacy skills, as assessed by the phonics screening check, a national assessment that is taken at the end of Year 1. GraphoGame training occurred during literacy sessions, when the control group children received regular literacy activities with the class teacher. This was a two-armed pupil-randomised controlled trial powered to detect a minimal detectable effect size of .17. Final data were available for 362 children from two cohorts, each doing the intervention for one spring term in successive years. Allocation to intervention or control group was done by stratified randomisation of pupils within classroom, to ensure roughly equal numbers of children in intervention and control groups in each classroom. Attrition was around 10 per cent for both intervention and control groups, and did not appear biased but rather due to chance events such as absence on the day of the test. ANCOVA (regression) analysis used to estimate the effects of the intervention on a preregistered outcome measure, with a pretest score used as a covariate.
+We started by simulating data from the original trial, which adopted a standard approach for analysing a Randomised Controlled Trial (Shadish, Cook, & Campbell, 2002), where children were randomly assigned to Intervention or Control groups. GraphoGame Rime (GG) intervention was compared with business-as-usual in a sample of 398 Year 2 pupils from 15 primary schools. All participants were selected as having low literacy skills, as assessed by the phonics screening check, a national assessment that is taken at the end of Year 1. GraphoGame training occurred during literacy sessions, when the control group children received regular literacy activities with the class teacher. This was a two-armed pupil-randomised controlled trial powered for a minimal detectable effect size of .17. Final data were available for 362 children from two cohorts, each doing the intervention for one spring term in successive years. Allocation to intervention or control group was done by stratified randomisation of pupils within classroom, to ensure roughly equal numbers of children in intervention and control groups in each classroom. Attrition was around 10 per cent for both intervention and control groups, and did not appear biased but rather due to chance events such as absence on the day of the test. ANCOVA (regression) analysis used to estimate the effects of the intervention on a preregistered outcome measure, with a pretest score used as a covariate.
 
 The DeclareDesign package includes a Design Library, with R code for simulating common experimental designs (see <https://declaredesign.org/r/designlibrary/>). We took as our starting point the Pretest Posttest Design (<https://declaredesign.org/r/designlibrary/articles/pretest_posttest.html>), which implements the type of analysis used by NFER. Although the design can be evaluated in a single step with specified parameters, we will walk through the Model, Inquiry, Data Strategy and Answer Strategy separately, to clarify the modular approach used in DeclareDesign. Much of the strength of DeclareDesign comes from this modularity; as we shall see, once we have declared an initial design, it is relatively straightforward to use elements of that design in a new design. We include code chunks here to illustrate the key features of DeclareDesign. The full code for all computations used in this paper is available in the Supplementary Material. 
 
@@ -114,11 +115,11 @@ The DeclareDesign package includes a Design Library, with R code for simulating 
 
 The model specifies the nature of the sample and observed variables, plus the estimated impact of an experimental manipulation (in this case intervention). 
 
-The code chunk DESIGN 1: MODEL SPECIFICATION below illustrates how the Model is coded for the pretest_posttest design. A potentially confusing feature of DeclareDesign is that the various 'declare' functions do not compute results, but rather specify new functions. These functions are then combined to create a full design specification. Those who have used *ggplot2* in R will be familiar with this approach, where a series of functions are combined using +. The order of functions is crucial, as each function takes as its input the output of the prior function. 
+The code chunk DESIGN 1: MODEL SPECIFICATION below illustrates how the Model is coded for the pretest_posttest design. A potentially confusing feature of DeclareDesign is that the various 'declare' functions do not compute results, but rather specify new functions. These functions are then combined to create a full design specification. Those who have used *ggplot2* in R will be familiar with this approach, where a series of functions is combined using +. The order of functions is crucial, as each function takes as its input the output of the prior function. 
 
 For didactic purposes we have added some additional steps to the code to make it possible to inspect results of the different steps; in addition, some variable names have been changed to make them more aligned with terminology commonly used in psychology.  
 
-For simplicity, we simulate scores as normally distributed with a standard deviation of 1, although virtually any kind of statistical distribution can be simulated. We need to specify the sample size (prior to attrition), *N*, the correlation between pretest and posttest scores, *rho*, and the size of the intervention effect or *EffSize* (In the DeclareDesign examples, this is referred to as *ate* or *Average Treatment Effect*). In addition, since the NFER analysis reported general improvement in scores on the reading test from time 1 to time 2 of around 1 SD, regardless of intervention, we specified a further term, *gain_t1t2* which is added to time 2 scores.  The first eight rows of the resulting simulated data are shown in Table 1.
+For simplicity, we simulate scores as normally distributed with a standard deviation of 1, although virtually any kind of statistical distribution can be simulated. We need to specify the sample size (prior to attrition), *N*, the correlation between pretest and posttest scores, *rho*, and the size of the intervention effect or *EffSize* (In the DeclareDesign examples, this is referred to as *ate* or *Average Treatment Effect*). In addition, since the NFER analysis reported general improvement in scores on the reading test from time 1 to time 2 of around 1 SD, regardless of intervention, we specified a further term, *gain_t1t2* which is added to time 2 scores.  
 
 ```{r specifymodel}
 # ------------------------------------------------------
@@ -145,6 +146,8 @@ potential_outcomes <- declare_potential_outcomes(Y_t2 ~ u_t2 + EffSize * Z) # de
 
 mypot <- potential_outcomes(mypop) # this step is added to make output of potential_outcomes function visible for explanatory purposes. Note that the functions operate in series; here, potential_outcomes takes as its input the output of the population function.
 ```
+
+The first eight rows of the resulting simulated data are shown in Table 1.  
 
 ```{r savetab1, echo=FALSE}
 #Save output in a table: echo = FALSE so code does not display when knitted
@@ -181,7 +184,7 @@ If we apply the estimand function to the data frame generated at the Model stage
 
 ### Data strategy
 
-The Data Strategy selects data for allocation to treatments and for analysis. In the chunks of code below, we first use *declare_assignment* to randomly assign cases to 0 (control) or 1 (intervention), and then use it again to specify whether or not the case *HasData* (using the attrition rate to randomly assign a proportion of cases as HasData = 0). We also make a new column that corresponds to the outcome corresponding to the intervention assignment for each case, and finally, we compute the observed difference (*diff_t1t2*) between posttest and pretest scores for each row. The first 8 rows of resulting simulated data from this code are shown in Table 2.
+The Data Strategy selects data for allocation to treatments and for analysis. In the chunks of code below, we first use *declare_assignment* to randomly assign cases to 0 (control) or 1 (intervention), and then use it again to specify whether or not the case *HasData* (using the attrition rate to randomly assign a proportion of cases as HasData = 0). We also make a new column that shows the outcome corresponding to the intervention assignment for each case, and finally, we compute the observed difference (*diff_t1t2*) between posttest and pretest scores for each row. 
 
 ```{r datastrategy}
 # ------------------------------------------------------
@@ -202,6 +205,8 @@ manipulation <- declare_step(diff_t1t2 = (Y_t2 - Y_t1),
                              handler = fabricate)
 mypotd<-manipulation(mypotc) #again, this step is just to clarify what the code does by creating a data frame that we can inspect; it computes a new variable diff_t1t2.
 ```
+
+The first eight rows of resulting simulated data from this code are shown in Table 2.
 
 ```{r savetab2, echo=FALSE}
 #Save output in a table
@@ -311,7 +316,7 @@ Figure `r nfig` illustrates two features of the designs. First, the simulated da
 
 ### Design 2: Modifying the simulation to incorporate classroom as a cluster
 
-Intervention studies conducted in schools can be affected by clustering, if children within a classroom are more similar to each other than to children from different classrooms. Typical standard errors and p-values from a regression model are based on the assumption that the residuals in the model across cases are independent from each other. If children within classrooms are more similar to each other, this violates the assumption of the independence of residuals, and to the extent to which that is true standard errors will be underestimated (and *p*-values over-estimated). 
+Intervention studies conducted in schools can be affected by clustering, if children within a classroom are more similar to each other than to children from different classrooms. Typical standard errors and _p_-values from a regression model are based on the assumption that the residuals in the model across cases are independent from each other. If children within classrooms are more similar to each other, this violates the assumption of the independence of residuals, and to the extent to which that is true standard errors will be underestimated (and _p_-values over-estimated). 
 
 Children from 53 classrooms were included in the GraphoGame trial, with an average of 7.5 pupils per class eligible for the trial, and 3.8 pupils per class randomised to receive the intervention. There is much debate about the best way to take such effects into account: NFER modelled classroom as a fixed effect, so we next modified the simulation to incorporate this feature in the design.
 
@@ -454,15 +459,15 @@ ftab<-set_caption(ftab,mycap)
 ftab
 ```
 
-This analysis confirms that precision is greater and power is higher for the ANCOVA analysis than for the repeated measures ANOVA when there is a true intervention effect, but the difference is slight. In subsequent models, we use the ANCOVA analysis.
+The summary in Table `r ntab` confirms that precision is greater and power is higher for the ANCOVA analysis than for the repeated measures ANOVA when there is a true intervention effect, but the difference is slight. In subsequent models, we use the ANCOVA analysis.
 
 ### Design 4: Including multiple outcomes
 
 The Cambridge group had administered some additional measures to participating children, and they reported analyses of five outcome measures: as well as the New Group Reading Test (as in the NFER analysis), they administered two subtests from the Test of Word Reading Efficiency (TOWRE) at follow-up, and again at time 3, after a delay.  Out of these five analyses, one showed a significant effect of intervention: a significantly larger improvement in the GraphoGame group on the TOWRE nonword subtest (*p* = .027) at immediate posttest. Neither of the TOWRE subtests differed between the intervention and control group at the delayed subtest after the school summer holiday. No adjustment for multiple comparisons was made.  
 
-It is well-established that false positives will increase if several outcomes are analysed without any statistical correction for multiple testing. Nevertheless, the standard recommendation to have a single outcome measure is not necessarily optimal in educational trials, where there may be a range of outcome measures that might be expected to be influenced by the intervention (Bishop, 2023). It is not unusual for multiple outcomes to be tested, and typically they are different measures of the same underlying construct - in this case literacy development. Here we show how DeclareDesign can be used to diagnose properties of the design when there are five correlated outcome measures.
+It is well-established that false positives will increase if several outcomes are analysed without any statistical correction for multiple testing. Nevertheless, the standard recommendation to have a single outcome measure is not necessarily optimal in educational trials, where there may be a range of outcome measures that might be expected to be influenced by the intervention (Bishop, 2023). It is not unusual for multiple correlated outcomes to be tested, and typically they are different measures of the same underlying construct - in this case literacy development. Here we show how DeclareDesign can be used to diagnose properties of the design when there are  correlated outcome measures.
 
-To generate measures in the simulation we first create a correlation matrix for five measures. In theory, it would be possible to use the correlation matrix from the original dataset, but this was not made available to us. Accordingly, we simulated five measures taken at both pre- and posttest, specifying plausible estimates for these based on our experience with comparable tests.  The test-retest correlation for each measure was set at .7, the intercorrelation between different measures taken on the same occasion was set at .6, and the intercorrelation between different measures on different occasions was set at .4. Note that the _redesign_ feature of DeclareDesign gives us flexibility to alter these estimates of correlations and consider the consequences. 
+To generate measures in the simulation we first create a correlation matrix for five measures. In theory, it would be possible to use the correlation matrix from the original RCT dataset, but this was not made available to us. Accordingly, we simulated five measures taken at both pre- and posttest, specifying plausible estimates for these based on our experience with comparable tests.  The test-retest correlation for each measure was set at .7, the intercorrelation between different measures taken on the same occasion was set at .6, and the intercorrelation between different measures on different occasions was set at .4. Note that the _redesign_ feature of DeclareDesign gives us flexibility to alter these estimates of correlations and consider the consequences. 
 
 We also included a correlation of .2 between all measures and a 'Level' index, which will be explained when we come to Design 6, but which for now can be ignored. We use the *draw_multivariate* function of DeclareDesign, which uses the *mvrnorm* function from the *MASS* package in R to generate data with the specified correlations.
 
@@ -511,7 +516,7 @@ mypop <- Mod4pop() #this step is added just to make output of function visible f
 
 ```
 
-The code for Model, Inquiry, Data Strategy and Answer Strategy for Design 4 from this point is equivalent to that for Design 1, except that we create potential outcomes, estimands, observed outcomes, and estimators separately for each of the five reading variables. (The full code is available in Supplementary material).
+The code for Model, Inquiry, Data Strategy and Answer Strategy for Design 4 from this point is equivalent to that for Design 1, except that we create potential outcomes, estimands, observed outcomes, and estimators separately for each of the five outcome variables. (The full code is available in Supplementary material).
 
 ```{r ExtraMod4, echo=FALSE}
 
@@ -681,7 +686,7 @@ report2 <- declare_assignment(Exclude = (Level < 0 ) & (Z == 1))   #TRUE (ie exc
 
 ```
 
-Finally, we need to modify the Answer Strategy to incorporate the new exclusion. We name this new answer myancova_sel, to denote that it is an ANCOVA with selection
+Finally, we need to modify the Answer Strategy to incorporate the new exclusion. We name this new answer _ancova_sel_, to denote that it is an ANCOVA with selection
 
 ```{r Design5answer,  warning=F}
 # ------------------------------------------------------
@@ -853,7 +858,7 @@ return(myg)
 
 mytitle <- ""
  GGplot<-plotsims2(myfile,myvar1,longvar1,mytitle)
- ggsave('simulated_figs/Fig2.png',width=3.5,height=4)
+ ggsave('simulated_figs/Fig2_Des1_Des6.png',width=3.5,height=4)
  
 ```
 
@@ -866,12 +871,12 @@ myfile$sig[myfile$p.value<.05]<-1
 
 myvar1<-"rho"
 myvar2<-"EffSize"
-longvar1<-"reliability (rho): "
+longvar1<-"Pretest-posttest rho: "
 longvar2<-"Intervention effect size: "
 # 
 mytitle <- ""
 plotDes1<-plotsims(myfile,myvar1,myvar2,longvar1,longvar2,mytitle)
-ggsave('simulated_figs/FigDesign1.png',height=3,width=5)
+ggsave('simulated_figs/FigDesign1.png',height=4,width=5)
 
 ```
 
@@ -883,11 +888,11 @@ This tutorial illustrates how seemingly contradictory conclusions from different
 
 The contrast between Design 1 and Design 5 emphasises the importance of using randomisation to evaluate interventions. The simulations demonstrate clearly that analysing subsets of data from an RCT can introduce bias into the estimates of the intervention effect because the randomisation of allocating participants to conditions is broken.  As demonstrated in Model 5, when randomisation is broken and we select participants to include based on a variable (called here Level, the level reached on GraphoGame) we introduce bias, or a systematic distortion of the true effect size. The degree of bias varies systematically with the extent to which Level correlates with the level of reading ability at time 2. The higher that correlation, the more the estimated effect size is (artifactually) increased. When the correlation is zero we obtain an unbiased (accurate) effect size. As the positive correlation gets larger, the estimated effect size gets (artifactually) larger. If Level correlated negatively with the level of reading ability we would obtain a negative effect, indicating artifactually that the intervention was harmful.
 
-This general conclusion about the need to respect the original randomisation in a RCT, and not select subgroups post hoc, has been known for decades in the literature on clinical trials, but may not be appreciated outside that domain. This may be particularly the case when selection is less extreme than in the Cambridge analysis.  A common situation is for there to be drop-outs from an intervention study. In this case, people's instincts about the appropriate method of analysis may conflict with best practice. As discussed by Bishop and Thompson (2023), it may seem logical that one should exclude from analysis those who did not complete the intervention. However, dropouts are seldom random, and a simple approach that just ignores them will introduce bias. There is a large literature on how this case should be handled, which is beyond the scope of this paper, but suffice it to say that if we were to simply rely on people's intuitions about appropriate analysis, we would mislead ourselves. 
+This general conclusion about the need to respect the original randomisation in a RCT, and not select subgroups post hoc, has been known for decades in the literature on clinical trials, but may not be appreciated outside that domain. This may be particularly the case when selection is less extreme than in the Cambridge analysis.  A common situation is for there to be drop-outs from an intervention study. In this case, people's instincts about the appropriate method of analysis may conflict with best practice. As discussed by Bishop and Thompson (2023), it may seem logical that one should exclude from analysis those who did not complete the intervention. However, dropouts are seldom random, and a simple approach that just ignores them will introduce bias. There is a large literature on how this case should be handled, which is beyond the scope of this paper, but suffice it to say that reliance on people's intuitions about appropriate analysis can be misleading. 
 
 In the clinical trials literature, it has also long been recognised that outcomes should be preregistered and statistics adjusted if multiple tests are used. However, we suspect that many researchers do not understand how serious the consequences may be if these basic rules are broken. The simulations we have presented using DeclareDesign quantify how serious deviating from recommending practice can be, especially when bias from p-hacking is combined with bias from sample selection. 
 
-In the context of educational trials, it may seem desirable to include a range of outcome measures to maximise one's chances of demonstrating an intervention effect. Bishop (2023) compared different approaches to handling this situation, noting that the popular method of applying a Bonferroni correction is over-conservative when outcome measures are correlated. An alternative approach, MEff, is similar to Bonferroni correction, but adjusts for intercorrelations between measures, and is less conservative. Where measures are indicators of a common construct, the best way of avoiding the problems associated with doing independent analyses of multiple outcome measures is to derive a latent construct (for an example, in the field of language intervention see West et al., 2021). Using a latent variable has the added advantage of increasing statistical power by eliminating error of measurement.
+In the context of educational trials, it may seem desirable to include a range of outcome measures to maximise one's chances of demonstrating an intervention effect. Bishop (2023) compared different approaches to handling this situation, noting that the popular method of applying a Bonferroni correction is over-conservative when outcome measures are correlated. An alternative approach, MEff, is similar to Bonferroni correction, but adjusts for intercorrelations between measures, and is less conservative. Where measures are indicators of a common construct, the best way of avoiding the problems associated with doing independent analyses of multiple outcome measures is to derive a latent construct (see West et al., 2021, for an example, in the field of language intervention). Using a latent variable has the added advantage of increasing statistical power by eliminating error of measurement.
 
 ### The Effectiveness of GraphoGame Rime as a method of teaching reading
 
@@ -904,7 +909,7 @@ The phenomenon of variability in analyses of the same data is attracting increas
 The code to reproduce the analyses reported in this article is publicly available via the Open Science Framework and can be accessed at xxx. 
 
 # Conflict of interest
-DVMB has no conflict of interest. [Charles - I think you probably should declare your interest in OxEd because if you don't someone will say it creates a conflict]
+DVMB has no conflict of interest.
 
 # References
 
