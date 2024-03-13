@@ -1,8 +1,7 @@
 ---
 title: "When alternative analyses of the same data come to different conclusions:
   A tutorial using DeclareDesign with a worked real-world example"
-author: "Dorothy Bishop & Charles Hulme"
-date: "26 Feb 2024"
+
 output: word_document
 format:
   docx:
@@ -72,15 +71,15 @@ Recent studies in psychology have documented how analytic flexibility can result
 
 # Alternative analyses: different conclusions
 
-There are several studies in the social sciences that show that different researchers analysing the same data can come to different conclusions. Among the reasons for discrepancies are differences in specification of the research question (Kummerfeld & Jones, 2023), but even when a question is clearly defined, differences can emerge because of analytic decisions (e.g., Silberzahn et al., 2018; Schweinsberg et al., 2021). Bishop and Thompson (2024) noted that in randomised trials evaluating the effectiveness of interventions, we need to minimize the impact of random noise on our estimates, while also being alert to the possibility of methodological choices that can introduce systematic bias. Most researchers will attempt to address these issues by following well-established methods, but it is rare to see any systematic attempt to compare analytic approaches at the point of planning a study.
+There are several studies in the social sciences that show that different researchers analysing the same data can come to different conclusions. Among the reasons for discrepancies are differences in specification of the research question (Kummerfeld & Jones, 2023), but even when a question is clearly defined, differences can emerge because of analytic decisions (e.g., Silberzahn et al., 2018; Schweinsberg et al., 2021). Bishop and Thompson (2024) noted that a good research design should minimize the impact of random noise on our estimates, while avoiding methodological choices that can introduce systematic bias. Most researchers will attempt to address these issues by following well-established methods, but it is rare to see any systematic attempt to compare analytic approaches at the point of planning a study.
 
 DeclareDesign is a suite of functions that allows one to simulate datasets from specified experimental designs and compare the effects of different sampling frames and analytic approaches (Blair, Coppock & Humphreys, 2023; <https://declaredesign.org/>). DeclareDesign was developed in the field of political science but is not widely known outside that field, despite its considerable benefits for researchers and policymakers. Simulations allow us to create datasets where the true values of estimated parameters are known, and then see how well those values are recovered in an analysis.
 
 DeclareDesign adopts a formal approach to research design, distinguishing between four steps: Model, Inquiry, Data Strategy and Answer strategy (MIDA), which are combined to characterise a design, which can then be evaluated using simulated data. Blair, Cooper, Coppock and Humphreys (2019) noted that although simulated data is often used to estimate the statistical power of a design, it is seldom used to evaluate other properties of interest, known as "diagnosands", such as precision of estimates (as reflected in the root-mean-squared-error or RMSE), and bias (systematic differences between estimates and true values). Another index, coverage, combines aspects of precision and bias, reflecting the probability that the confidence interval around an estimate contains the true value. A useful feature of the package is that once a research design has been formally specified, it is easy to manipulate parameters to see the impact on statistical power, precision, bias, and other diagnosands for a proposed study. It has a modular structure that also makes it easy to create new designs by combining features of old designs.
 
-In this article we illustrate how DeclareDesign can be used to compare different approaches to analysing data from an intervention trial. We take as a case study recent work evaluating results from a large randomised controlled trial (RCT) on the effectiveness of GraphoGame Rime (<https://graphogame.com>), a computer-based game designed to improve children's reading. This example is pertinent because there are published analyses that come to contradictory conclusions. 
+In this article we illustrate how DeclareDesign can be used to compare different approaches to analysing data from an intervention trial. We take as a case study recent work evaluating results from a large randomised controlled trial (RCT) on the effectiveness of GraphoGame Rime (<https://graphogame.com>), a computer-based game designed to improve children's reading (see Goswami & East, 2000).  This example is pertinent because there are published analyses of the RCT that come to contradictory conclusions. 
 
-The Graphogame RCT was funded jointly by the Wellcome Trust and the Education Endowment Foundation (EEF), as part of a scheme to develop collaborative intervention research between educators and neuroscientists. This trial, registered at <http://www.isrctn.com/ISRCTN10467450>, selected poor readers who were randomly assigned within classrooms to GraphoGame Rime or a Business as Usual control group.  EEF projects undergo independent evaluation by researchers who are not involved in obtaining the funding. Details of the original RCT are provided in the report by independent evaluators from the National Foundation for Educational Research (NFER: Worth et al., 2018). The conclusion from this independently conducted evaluation was stark: *"The trial found no evidence that GraphoGame Rime improves pupils' reading or spelling test scores when compared to business-as-usual. This result has very high security"*. The high security rating refers to the Education Endowment Foundation's rating of the methodological quality of this randomised trial. A reanalysis was headed by Usha Goswami from the University of Cambridge, the educational neuroscientist who had developed the English version of Graphogame Rime, and who had obtained the funding for the study. The Cambridge analysis concluded that *"The current study suggests that young learners of the English orthography show significant benefits in learning both phonic decoding skills and spelling skills from the supplementary use of GG Rime in addition to ongoing classroom literacy instruction."* (Ahmed et al., 2020). Those considering using Graphogame will find it confusing that such diametrically opposed conclusions can be drawn from analysis of the same dataset. Here we show how modeling the contrasting analytic approaches can clarify the sources of disagreement.
+The Graphogame RCT was funded jointly by the Wellcome Trust and the Education Endowment Foundation (EEF), as part of a scheme to develop collaborative intervention research between educators and neuroscientists. This trial, registered at <http://www.isrctn.com/ISRCTN10467450>, selected poor readers who were randomly assigned within classrooms to GraphoGame Rime or a Business as Usual control group.  EEF projects undergo independent evaluation by researchers who are not involved in obtaining the funding. Details of the original RCT are provided in the report by independent evaluators from the National Foundation for Educational Research (NFER: Worth et al., 2018). The conclusion from this independently conducted evaluation was stark: *"The trial found no evidence that GraphoGame Rime improves pupils' reading or spelling test scores when compared to business-as-usual. This result has very high security"*. The high security rating refers to the Education Endowment Foundation's rating of the methodological quality of this randomised trial. A reanalysis was conducted by researchers at the University of Cambridge, who had developed the English version of Graphogame Rime, and who had obtained the funding for the study. The Cambridge analysis concluded that *"The current study suggests that young learners of the English orthography show significant benefits in learning both phonic decoding skills and spelling skills from the supplementary use of GG Rime in addition to ongoing classroom literacy instruction."* (Ahmed et al., 2020). Those considering using Graphogame will find it confusing that such diametrically opposed conclusions can be drawn from analysis of the same dataset. Here we show how modeling the contrasting analytic approaches can clarify the sources of disagreement.
 
 
 ## Methods
@@ -97,7 +96,9 @@ We simulated six different designs to illustrate the impact of each of different
 
 5)  *Selection of participants for analysis*. The NFER analysis included all participants in the RCT for whom outcome data was available. The Cambridge analysis dropped half of the intervention group who were below average in the level of the game they had achieved, on the grounds that they may not have been engaged with the intervention. In Design 5, we consider the consequences of modifying Design 1 to restrict analysis to a subset of participants from the intervention group.
 
-For each analysis, we considered the diagnosands statistical power, bias, RMSE and coverage. Finally, in Design 6 we considered the effect of combining Designs 4 and 5 to model the Cambridge analysis as closely as possible. 
+6) *Combining Designs 4 and 5*. In Design 6 we considered the effect of combining Designs 4 and 5 to model the Cambridge analysis as closely as possible.
+
+For each analysis, we considered the diagnosands statistical power, bias, RMSE and coverage. 
 
 
 ## Design 1. Simulation of original analysis, with variable correlations between pretest and posttest measures
@@ -126,7 +127,7 @@ For simplicity, we simulate scores as normally distributed with a standard devia
 
 N         <- 398 # full sample size, prior to attrition
 sd_1      <- 1   # we work with random normal deviates, so SD = 1
-gain_t1t2 <- 1   # scores improve by 1 SD on average
+gain_t1t2 <- 1   # scores improve by 1 SD on average from t1 to t2
 sd_2      <- 1   # we work with random normal deviates, so SD = 1
 rho       <- 0.6 # correlation between time 1 and time 2 scores (Table 3 of NFER report = .57)
 EffSize   <- 0   # average treatment effect (Table 6 of NFER report = -0.06)
@@ -261,8 +262,7 @@ To get a reliable estimate of the properties of this design, and the variability
 # DESIGN 1: DECLARE THE DESIGN
 # ------------------------------------------------------
    
-Design1 <- population + potential_outcomes + estimand + assignment + reveal_t2 + report + 
-  ancova
+Design1 <- population + potential_outcomes + estimand + assignment + reveal_t2 + report +  ancova
 
 #We will compare Designs with two values of EffSize and two values of rho
 #Original power computation used EffSize of .17, here we select .2
@@ -301,7 +301,7 @@ The default output from the model diagnosis (saved in Design1_diagnosis$diagnosa
 
 When we run _diagnose_designs_ we create a structure that saves the result from each simulation in a dataframe, as well as the dataframe containing the diagnosands for each set of parameters. These can be used for generating graphical displays of results. 
 
-Figure `r nfig` shows graphically the distribution of estimates from the model after 10,000 runs of each simulation with four different parameter settings (two values of rho, and effect sizes of 0 or .2), and 
+Figure `r nfig` shows graphically the distribution of estimates from the model after 10,000 runs of each simulation with four different parameter settings (two values of rho, and effect sizes of 0 or .2). 
 
 (Figure `r nfig` about here)
 
@@ -433,19 +433,19 @@ Design3_diagnosis<-diagnose_designs(designs_diff,sims=nsims)
 save(Design3_diagnosis,file=paste0("simulated_data/Design3_",nsims,".RData"))
 ```
 
-```{r savetabMod3diag,echo=FALSE, warning=FALSE}
+```{r savetabDes3diag,echo=FALSE, warning=FALSE}
 ntab<-ntab+1
 #we use prior simulated data if we have them
 if(haveresults==1){
   load("simulated_data_10K/Design3_10000.RData")
 }
-tabMod3 <- Design3_diagnosis$diagnosands_df
+tabDes3 <- Design3_diagnosis$diagnosands_df
 tabname<-paste0("GGTables/Table ",ntab,"_Comparison of ANCOVA (regression) vs repeated measures (change scores) analysis.csv")
-write.csv(tabMod3,tabname,row.names=F)
+write.csv(tabDes3,tabname,row.names=F)
 
 #simplify table for display
-mydiagnosands <- c('EffSize','rho','mean_estimate','se(mean_estimate)','bias','rmse','power','coverage')
-tabDes3a<-tabDes3a[,mydiagnosands]
+mydiagnosands <- c('estimator','EffSize','rho','mean_estimate','bias','rmse','power','coverage')
+tabDes3a<-tabDes3[,mydiagnosands]
 
 ftab<-flextable(tabDes3a)
 ftab<- fit_to_width(ftab,8) #convert from table1 to flextable format to allow formatting of width etc
@@ -617,7 +617,7 @@ for (i in 1:nsimsx){
     maxw<-which(Desnull$estimate[w]==max(Desnull$estimate[w])) #largest estimate, so one-tailed
     newsim[i,]<-Desnull[w[maxw],]
 }
-#classify results as significant or not (positive results only counted as sig)
+#classify results as significant or not (only positive results counted as sig)
 newsim$sig <- 0
 wx <- intersect(which(newsim$p.value<.05),which(newsim$estimate>0))
 newsim$sig[wx] <- 1
@@ -639,7 +639,7 @@ fprate4<-newsimsummary[2]
 ntab <- ntab+1
 showtab <- newsim4[1:8,c('sim_ID','inquiry','estimate','std.error','p.value','sig')]
 ftab<-flextable(showtab)
-ftab<- fit_to_width(ftab,12) #convert from table1 to flextable format to allow formatting of width etc
+ftab<- fit_to_width(ftab,8) #convert from table1 to flextable format to allow formatting of width etc
 mycap<-paste0("Table ",ntab,":  Most extreme positive results from the first 8 simulations of Design 4")
 ftab<-set_caption(ftab,mycap)
 ftab
@@ -653,7 +653,7 @@ The Cambridge group reanalysed the data after dropping children from the interve
 
 According to this logic, one might have expected the re-analysis to focus on a subgroup of children who had spent some minimum amount of time playing the game. However, we already know from the NFER report that more time playing the game was not associated with better progress - if anything, the converse. Worth et al. (2018) reported a negative correlation between the amount of time spent playing GraphoGame and reading post-test scores (*r* = -.298): i.e., the more time the child spent playing the game, the less progress they made. Instead, the Cambridge group took the subset of children who made *most progress* through the game. The game is adaptive, progressing through 25 streams of phonic knowledge. The mean point reached by all the intervention group was level 5 of Stream 16. So the authors selected a "top half" group of children who played the game beyond that point. We will refer to this as the Top-Half GG group. This is a group of children, who based on their progress on GraphoGame, are mastering the rules of phonics better than the other children in the intervention group.
 
-It is relatively straightforward to modify Design 1 to represent the selection of the Top-Half GG cases as was done in the Cambridge analysis. To do this we create a new latent variable, Level, which represents the level reached by players of GraphoGame. This is modeled as a random normal deviate, as for the other latent variables. A critical issue is how far it correlates with u_t2 (the level of the unobserved latent reading ability at time 2). We can model this scenario with a new variable, r_L.u2, which represents the correlation between L (the Level reached on GraphoGame) and u_t2 (the unobserved latent reading ability at time 2). It seems likely that the children who progress furthest through the game are those that learn fastest on GraphoGame, which after all is a measure of learning to read (learning correspondences between letters and groups of letters in printed words, and their pronunciations). Thus we anticipate that r_L.u2 will be greater than zero.
+It is relatively straightforward to modify Design 1 to represent the selection of the Top-Half GG cases as was done in the Cambridge analysis. To do this we create a new latent variable, Level, which represents the level reached by players of GraphoGame. This is modeled as a random normal deviate, as for the other latent variables. A critical issue is how far it correlates with _u_t2_ (the level of the unobserved latent reading ability at time 2). We can model this scenario with a new variable, _r_L.u2_, which represents the correlation between  the Level reached on GraphoGame and _u_t2_ (the unobserved latent reading ability at time 2). It seems likely that the children who progress furthest through the game are those that learn fastest on GraphoGame, which after all is a measure of learning to read (learning correspondences between letters and groups of letters in printed words, and their pronunciations). Thus we anticipate that _r_L.u2_ will be greater than zero.
 
 
 ```{r Design5model,  warning=F}
@@ -799,13 +799,14 @@ allsim<-rbind(newsim2,newsim6)
 
 It is clear that the combination of using multiple outcomes (Design 4) and discarding participants from the intervention group (Design 5) dramatically biases the estimates, with a mean estimate of `r bias6` and a false positive rate of `r fprate6`, even though the amount of correlation between the selection variable and outcome is relatively modest (*r* = .2). The modeling with DeclareDesign helps clarify how two aspects of analysis which individually create some bias in estimates have a more serious impact when in combination.
 
-```{r plotsims, echo=F, warning=F}
+```{r plotsims, echo=F, warning=F,message=FALSE}
 # function to plot simulations
 
 # Note about the code: I used geom_histogram with separate subsets for  sig ==0 and sig==1, but what we really want is the whole distribution plotted first, and then a coloured distribution of significant values overlaid. The current code does that, and the strange code where it says 'subset' but then doesn't give a subset for blue plotted histo is just a hangover from earlier code. 
 
 plotsims<-function(myfile,myvar1,myvar2,longvar1,longvar2,mytitle){
   #Altering names of variables to longvar versions to facilitate labeling
+
 c1<-which(names(myfile)==myvar1)
 c2<-which(names(myfile)==myvar2)
 myfile$myvar1<-paste0(longvar1,myfile[,c1])
@@ -844,7 +845,7 @@ return(myg)
 
 ```
 
-```{r dofacetplots, echo=FALSE, warning=FALSE}
+```{r dofacetplots, echo=FALSE, warning=FALSE,message=FALSE}
 
  myfile<-allsim
  myvar1<-'design'
@@ -856,7 +857,7 @@ mytitle <- ""
  
 ```
 
-```{r makefirstfig, echo=FALSE,warning=FALSE}
+```{r makefirstfig, echo=FALSE,warning=FALSE,message=FALSE}
  
 myfile<-Design1_diagnosis$simulations_df
 #add flag to show which are significant
@@ -868,9 +869,9 @@ myvar2<-"EffSize"
 longvar1<-"reliability (rho): "
 longvar2<-"Intervention effect size: "
 # 
-mytitle <- "Design 1, 10,000 simulations"
+mytitle <- ""
 plotDes1<-plotsims(myfile,myvar1,myvar2,longvar1,longvar2,mytitle)
-ggsave('simulated_figs/FigDesign1.png')
+ggsave('simulated_figs/FigDesign1.png',height=3,width=5)
 
 ```
 
@@ -888,9 +889,11 @@ In the clinical trials literature, it has also long been recognised that outcome
 
 In the context of educational trials, it may seem desirable to include a range of outcome measures to maximise one's chances of demonstrating an intervention effect. Bishop (2023) compared different approaches to handling this situation, noting that the popular method of applying a Bonferroni correction is over-conservative when outcome measures are correlated. An alternative approach, MEff, is similar to Bonferroni correction, but adjusts for intercorrelations between measures, and is less conservative. Where measures are indicators of a common construct, the best way of avoiding the problems associated with doing independent analyses of multiple outcome measures is to derive a latent construct (for an example, in the field of language intervention see West et al., 2021). Using a latent variable has the added advantage of increasing statistical power by eliminating error of measurement.
 
-### The Effectiveness of GraphoGame as a method of teaching reading
+### The Effectiveness of GraphoGame Rime as a method of teaching reading
 
-Our simulations demonstrate that the conclusions from the Cambridge analyses are insecure, because they used methods that introduce bias into estimates of effects of intervention - selection of subgroups for analysis after the study is completed. The problems created by such approaches are well-known in fields such as clinical trials and political science. For instance, in their Guideline on the investigation of subgroups in confirmatory clinical trials, the Committee for Medicinal Products for Human Use (2019) stated: "From a formal statistical point of view, no further confirmatory conclusions are possible in a clinical trial where the primary null hypothesis cannot be rejected." And in a paper entitled: "How conditioning on post-treatment variables can ruin your experiment and what to do about it", Montgomery et al. (2018) noted the dangers of practices such as "dropping participants who fail manipulation checks; controlling for variables measured after the treatment such as potential mediators; or subsetting samples based on post-treatment variables". All of these practices can lead to biased estimates. Unfortunately, the Cambridge analyses fall in this category, so, contrary to the conclusions of Ahmed et al. (2020), we conclude that there is no convincing evidence that GraphoGame is effective.
+The RCT described here was designed to give a convincing answer to the question of whether GraphoGame Rime was an effective intervention for children who were struggling with learning to read. Although studies of GraphoGame had been conducted prior to this RCT, they were mostly small and quasi-experimental (McTigue et al., 2019). The effectiveness of GraphoGame Rime is a high stakes issue, given that, according to the company's website, it has been used by over 4 million children, and is an "effective, proven and affordable way to teach reading..." and "The most researched literacy game in the world." The contradictory claims arising from the same study have led to confusion. 
+
+Our simulations demonstrate that the conclusions from the Cambridge analyses are insecure, because they used methods that introduce bias into estimates of effects of intervention - selection of subgroups for analysis after the study is completed. The problems created by such approaches are well-known in fields such as clinical trials and political science. For instance, in their Guideline on the investigation of subgroups in confirmatory clinical trials, the Committee for Medicinal Products for Human Use (2019) stated: "From a formal statistical point of view, no further confirmatory conclusions are possible in a clinical trial where the primary null hypothesis cannot be rejected." And in a paper entitled: "How conditioning on post-treatment variables can ruin your experiment and what to do about it", Montgomery et al. (2018) noted the dangers of practices such as "dropping participants who fail manipulation checks; controlling for variables measured after the treatment such as potential mediators; or subsetting samples based on post-treatment variables". All of these practices can lead to biased estimates. Unfortunately, the Cambridge analyses fall in this category, so, contrary to the conclusions of Ahmed et al. (2020), we conclude that there is no convincing evidence that GraphoGame Rime is more effective than Business-As-Usual. 
 
 ### Potential of DeclareDesign for evaluating analytic designs in psychology
 
@@ -898,7 +901,10 @@ The phenomenon of variability in analyses of the same data is attracting increas
 
 ## Disclosures
 
-The code to reproduce the analyses reported in this article is publicly available via the Open Science Framework and can be accessed at xxx
+The code to reproduce the analyses reported in this article is publicly available via the Open Science Framework and can be accessed at xxx. 
+
+# Conflict of interest
+DVMB has no conflict of interest. [Charles - I think you probably should declare your interest in OxEd because if you don't someone will say it creates a conflict]
 
 # References
 
