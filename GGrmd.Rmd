@@ -76,7 +76,7 @@ There are several studies in the social sciences that show that different resear
 
 DeclareDesign is a suite of functions that allows one to simulate datasets from specified experimental designs and compare the effects of different sampling frames and analytic approaches (Blair, Coppock & Humphreys, 2023; <https://declaredesign.org/>). DeclareDesign was developed in the field of political science but is not widely known outside that field, despite its considerable benefits for researchers and policymakers. Simulations allow us to create datasets where the true values of estimated parameters are known, and then see how well those values are recovered in an analysis.
 
-DeclareDesign adopts a formal approach to research design, distinguishing between four steps: Model, Inquiry, Data Strategy and Answer Strategy (MIDA) that are combined to characterise a design, which can then be evaluated using simulated data. Blair, Cooper, Coppock and Humphreys (2019) noted that although simulated data is often used to estimate the statistical power of a design, it is seldom used to evaluate other properties of interest, known as "diagnosands", such as precision of estimates (as reflected in the root-mean-squared-error or RMSE), and bias (systematic differences between estimates and true values). Another index, coverage, combines aspects of precision and bias, reflecting the probability that the confidence interval around an estimate contains the true value.  A useful feature of the package is that once a research design has been specified, it is easy to manipulate parameters to see their effect on statistical power, precision, bias, and other diagnosands for a proposed study. It has a modular structure that also makes it easy to create new designs by combining features of old designs.
+DeclareDesign adopts a formal approach to research design, distinguishing between four steps: Model, Inquiry, Data Strategy and Answer Strategy (MIDA) that are combined to characterise a design, which can then be evaluated using simulated data. Blair, Cooper, Coppock and Humphreys (2019) noted that although simulated data is often used to estimate the statistical power of a design, it is seldom used to evaluate other properties of interest, known as "diagnosands", such as precision of estimates (as reflected in the root-mean-squared-error or RMSE), and bias (systematic differences between estimates and true values). Another index, coverage, combines aspects of precision and bias, reflecting the probability that the confidence interval around an estimate contains the true value. A useful feature of the package is that once a research design has been specified, it is easy to manipulate parameters to see their effect on statistical power, precision, bias, and other diagnosands for a proposed study. It has a modular structure that also makes it easy to create new designs by combining features of old designs.
 
 In this article we illustrate how DeclareDesign can be used to compare different approaches to analysing data from an intervention trial. We take as a case study a large randomised controlled trial (RCT) evaluating effectiveness of GraphoGame Rime (<https://graphogame.com>), a computer-based game designed to improve children's reading (see Goswami & East, 2000). This example is pertinent because there are published analyses of the RCT that come to contradictory conclusions.
 
@@ -86,7 +86,7 @@ The GraphoGame RCT was funded jointly by the Wellcome Trust and the Education En
 
 We simulated six different designs to illustrate the impact of different analytic choices, using the DeclareDesign package (Blair, Coppock, & Humphreys, 2023) in the R computing language (R Core Team, 2023). The simulated designs demonstrated the impact of five features of the designs used by the NFER and Cambridge groups:
 
-1)  *1)	Basic pretest- posttest design with variable correlation between pretest and posttest (outcome) measures*. The NFER analysis used a preregistered outcome measure, the New Group Reading Test (NGRT). The test-retest reliability of this measure, as reflected in pretest-posttest correlations was lower (.57) than anticipated (.8). In Design 1, we introduce DeclareDesign with the basic design used by the NFER evaluators and show how simulations can be easily generated to diagnose the properties of the design; in particular we quantify the impact of pretest-posttest correlation on the power of the design to estimate the intervention effect.
+1)  *1) Basic pretest- posttest design with variable correlation between pretest and posttest (outcome) measures*. The NFER analysis used a preregistered outcome measure, the New Group Reading Test (NGRT). The test-retest reliability of this measure, as reflected in pretest-posttest correlations was lower (.57) than anticipated (.8). In Design 1, we introduce DeclareDesign with the basic design used by the NFER evaluators and show how simulations can be easily generated to diagnose the properties of the design; in particular we quantify the impact of pretest-posttest correlation on the power of the design to estimate the intervention effect.
 
 2)  *Control for clustering by classroom*. The NFER analysis included a term in the regression analysis that took into account clustering of scores by classroom. This was not done in the Cambridge analysis. With Design 2 we show how to modify Design 1 to simulate data that are hierarchically clustered and see how this affects diagnosands.
 
@@ -162,9 +162,9 @@ ftab
 
 ```
 
-The first function, *population*, generates the first four columns for 398 rows. The first column, *ID*, identifies each simulated participant by a sequential number. Columns with the prefix u\_ correspond to unobserved latent variables, with _u_t1_ representing time 1 scores and _u_t2_ representing time 2 scores. The code specifies that these are drawn from a population where _u_t1_ and _u_t2_ are correlated with correlation *rho*. For the whole dataframe, the mean of _u_t2_ is greater than _u_t1_ by the value *gain_t1t2*. Note that the inclusion of the *gain_t1t2* term has no impact on the estimate of the intervention effect size, as it applies regardless of intervention status. It is included here just to ensure that the simulated data resemble real data in terms of giving higher scores at t2 than t1.
+The first function, *population*, generates the first four columns for 398 rows. The first column, *ID*, identifies each simulated participant by a sequential number. Columns with the prefix u\_ correspond to unobserved latent variables, with *u_t1* representing time 1 scores and *u_t2* representing time 2 scores. The code specifies that these are drawn from a population where *u_t1* and *u_t2* are correlated with correlation *rho*. For the whole dataframe, the mean of *u_t2* is greater than *u_t1* by the value *gain_t1t2*. Note that the inclusion of the *gain_t1t2* term has no impact on the estimate of the intervention effect size, as it applies regardless of intervention status. It is included here just to ensure that the simulated data resemble real data in terms of giving higher scores at t2 than t1.
 
-Columns with the prefix Y\_ correspond to expected values for observed variables. _Y_t1_ is equal to _u_t1_ and corresponds to the observed pretest value. Although this is redundant, it clarifies the distinction between unobserved, latent variables and observed variables. For _Y_t2_ there are two values generated, _Y_t2_Z_0_ and _Y_t2_Z_1_. These are expected observed values at posttest (potential outcomes), depending on whether the case is allocated to the control group _(Z_0)_ or the intervention group _(Z_1)_. The values of _Y_t2_Z_0_ are the same as values of _u_t2_, whereas the values of _Y_t2_Z_1_ correspond to _u_t2_ plus the value of *EffSize*. That is, _Y_t2_Z_1_ corresponds to the expected observed value at posttest plus an added component equal to the average treatment effect.
+Columns with the prefix Y\_ correspond to expected values for observed variables. *Y_t1* is equal to *u_t1* and corresponds to the observed pretest value. Although this is redundant, it clarifies the distinction between unobserved, latent variables and observed variables. For *Y_t2* there are two values generated, *Y_t2_Z_0* and *Y_t2_Z_1*. These are expected observed values at posttest (potential outcomes), depending on whether the case is allocated to the control group *(Z_0)* or the intervention group *(Z_1)*. The values of *Y_t2_Z_0* are the same as values of *u_t2*, whereas the values of *Y_t2_Z_1* correspond to *u_t2* plus the value of *EffSize*. That is, *Y_t2_Z_1* corresponds to the expected observed value at posttest plus an added component equal to the average treatment effect.
 
 ### Inquiry
 
@@ -177,11 +177,11 @@ The Inquiry specifies what parameter we want to estimate from the Design - known
 estimand <- declare_inquiry(EffSize = mean(Y_t2_Z_1 - Y_t2_Z_0))
 ```
 
-If we apply the estimand function to the data frame generated at the Model stage, we get a value of the estimand of `r estimand(mypot)$estimand`. While this is reassuring, it is hardly surprising, since we defined _Y_t2_Z_0_ and _Y_t2_Z_1_ as equivalent but with the specified *EffSize* added to the _Y_t2_Z_1_ condition. In subsequent steps we consider how the estimand compares with estimates of its value in subsets of simulated data, with differences between the estimand and estimates indicating how much bias there is in the analysis.
+If we apply the estimand function to the data frame generated at the Model stage, we get a value of the estimand of `r estimand(mypot)$estimand`. While this is reassuring, it is hardly surprising, since we defined *Y_t2_Z_0* and *Y_t2_Z_1* as equivalent but with the specified *EffSize* added to the *Y_t2_Z_1* condition. In subsequent steps we consider how the estimand compares with estimates of its value in subsets of simulated data, with differences between the estimand and estimates indicating how much bias there is in the analysis.
 
 ### Data strategy
 
-The Data Strategy selects data for allocation to treatments and for analysis. In the chunks of code below, we first use *declare_assignment* to randomly assign cases to 0 (control) or 1 (intervention), and then use it again to specify whether or not the case *HasData* (using the attrition rate to randomly assign a proportion of cases as _HasData_ = 0). We also make a new column that shows the outcome corresponding to the intervention assignment for each case, and finally, we compute the observed difference (*diff_t1t2*) between posttest and pretest scores for each row.
+The Data Strategy selects data for allocation to treatments and for analysis. In the chunks of code below, we first use *declare_assignment* to randomly assign cases to 0 (control) or 1 (intervention), and then use it again to specify whether or not the case *HasData* (using the attrition rate to randomly assign a proportion of cases as *HasData* = 0). We also make a new column that shows the outcome corresponding to the intervention assignment for each case, and finally, we compute the observed difference (*diff_t1t2*) between posttest and pretest scores for each row.
 
 ```{r datastrategy}
 # ------------------------------------------------------
@@ -299,19 +299,19 @@ ftab
 nfig <- nfig+1
 ```
 
-The default output from the model diagnosis (saved in _Design1_diagnosis\$diagnosands_df_) is complex, and we present here simplified tables that just show the parameters varied in the design, and the mean estimate of intervention effect with its standard error, the bias (i.e., mean estimate minus estimand), RMSE, the statistical power, and the coverage (probability that the confidence interval contains the true value). An optimal design will give estimates close to the true value (estimand), with RMSE below .1, and coverage around .95. The proportion of significant estimates is labelled as power. Where the true effect size is greater than zero, power indicates the probability of detecting a genuine effect given the research design. If, however, the true effect size is zero, then this value corresponds to the false positive rate, and is expected to be close to the specified alpha (.05 in this case): the estimate here is 0.049. Where *rho* = .6, power is low (66%) to detect an Effect size (Standardised Mean Difference between groups) of .2. In contrast where *rho* = .8, power is increased substantially (88% power to detect an Effect Size of .2).
+The default output from the model diagnosis (saved in *Design1_diagnosis\$diagnosands_df*) is complex, and we present here simplified tables that just show the parameters varied in the design, and the mean estimate of intervention effect with its standard error, the bias (i.e., mean estimate minus estimand), RMSE, the statistical power, and the coverage (probability that the confidence interval contains the true value). An optimal design will give estimates close to the true value (estimand), with RMSE below .1, and coverage around .95. The proportion of significant estimates is labelled as power. Where the true effect size is greater than zero, power indicates the probability of detecting a genuine effect given the research design. If, however, the true effect size is zero, then this value corresponds to the false positive rate, and is expected to be close to the specified alpha (.05 in this case): the estimate here is 0.049. Where *rho* = .6, power is low (66%) to detect an Effect size (Standardised Mean Difference between groups) of .2. In contrast where *rho* = .8, power is increased substantially (88% power to detect an Effect Size of .2).
 
 When we run *diagnose_designs* we create a structure that saves the result from each simulation in a dataframe, as well as the dataframe containing the diagnosands for each set of parameters. These can be used for generating graphical displays of results.
 
-Figure `r nfig` shows graphically the distribution of estimates from the model after 10,000 runs of each simulation with four different parameter settings (two values of _rho_, and effect sizes of 0 or .2).
+Figure `r nfig` shows graphically the distribution of estimates from the model after 10,000 runs of each simulation with four different parameter settings (two values of *rho*, and effect sizes of 0 or .2).
 
 (Figure `r nfig` about here)
 
-*Figure `r nfig`*. *Simulated distributions of estimated effect size for Design 1, 10,000 simulations. The blue corresponds to nonsignificant estimates, and the purple to estimates where _p_ \< .05. For the null case, where the true intervention effect size is zero, the purple regions correspond to false positives on a two-tailed test*.
+*Figure `r nfig`*. *Simulated distributions of estimated effect size for Design 1, 10,000 simulations. The blue corresponds to nonsignificant estimates, and the purple to estimates where p* \< .05. For the null case, where the true intervention effect size is zero, the purple regions correspond to false positives on a two-tailed test.
 
 Figure `r nfig` illustrates two features of the designs. First, the simulated data generate the "true" effect sizes accurately (mean effect sizes of 0.0 and 0.2 as expected). Second an increase in the pretest-posttest correlation does not affect the estimated effect size, but variability in the estimates of the effect size are smaller when the correlation is higher, leading to higher power to detect a true effect.
 
-### Design 2: Modifying the simulation to incorporate classroom as a cluster
+## Design 2: Modifying the simulation to incorporate classroom as a cluster
 
 Intervention studies conducted in schools can be affected by clustering if children within a a school are more similar to each other than to children from different schools. Typical standard errors and *p*-values from a regression model depend on the assumption that the residuals in the model across cases are independent from each other. If children within classrooms are more similar to each other, this violates the assumption of the independence of residuals, and affects the precision of hypothesis tests and confidence intervals.
 
@@ -358,8 +358,7 @@ mypot2<-potential_outcomes(nupop)
 clusrho <- clus.rho(popchar=nupop$u_t1, cluster = nupop$class, type = 3, est = 0, nboot = 500)
 ```
 
-The Inquiry is the same as for Design 1 but the Data Strategy needs modifying to take the clustering into account. DeclareDesign offers different options for dealing with clusters. One option is to randomize intervention assignment within class - this was done in the NFER analysis, and can be achieved with the _strata_rs_ command.
-DeclareDesign has another option for handling clusters, which is to randomise by cluster, using the _cluster_rs_ command. We mention this here to illustrate the flexibility of DeclareDesign, but will not consider randomisation by cluster further, as it requires a different analysis strategy (see chapter 18 of Blair, Coppock, & Humphreys, 2023).
+The Inquiry is the same as for Design 1 but the Data Strategy needs modifying to take the clustering into account. DeclareDesign offers different options for dealing with clusters. One option is to randomize intervention assignment within class - this was done in the NFER analysis, and can be achieved with the *strata_rs* command. DeclareDesign has another option for handling clusters, which is to randomise by cluster, using the *cluster_rs* command. We mention this here to illustrate the flexibility of DeclareDesign, but will not consider randomisation by cluster further, as it requires a different analysis strategy (see chapter 18 of Blair, Coppock, & Humphreys, 2023).
 
 ```{r datastrategy2}
 # ------------------------------------------------------
@@ -439,11 +438,11 @@ ftab<-set_caption(ftab,mycap)
 ftab
 ```
 
-The results in Table `r ntab` confirm that the clustering by classroom has a negligible effect on the analysis, even when the ICC for classroom is relatively high. In this case, because children were randomized within classrooms, including classroom as a cluster variable in the analysis has no effect on statistical power.  If this had been a cluster randomized design where randomization was at the classroom level, the higher the ICC the lower the power would be.  Given that the ICC does not affect power here, for Models 3-5 we ignore the effect of clusters.
+The results in Table `r ntab` confirm that the clustering by classroom has a negligible effect on the analysis, even when the ICC for classroom is relatively high. In this case, because children were randomized within classrooms, including classroom as a cluster variable in the analysis has no effect on statistical power. If this had been a cluster randomized design where randomization was at the classroom level, the higher the ICC the lower the power would be. Given that the ICC does not affect power here, for Models 3-5 we ignore the effect of clusters.
 
-### Design 3: Comparing repeated measures ANOVA with ANCOVA
+## Design 3: Comparing repeated measures ANOVA with ANCOVA
 
-The Cambridge reanalysis treated pretest and posttest scores as different levels of a dependent variable in an Analysis of Variance, where group was the between-subjects factor and time was the within-subjects factor. The intervention effect is then estimated from the interaction term. Mathematically, this is equivalent to a comparison of pretest/posttest difference scores for the intervention versus the control group (the time 2 score minus the time 1 score  for each participant in the two groups). We can readily check the impact of this analytic decision using code that is included in the *pretest_posttest* function in the DeclareDesign vignette. (<https://declaredesign.org/r/designlibrary/articles/pretest_posttest.html>). This time our Design includes two alternative analyses of the same simulated data - the original regression with pretest as covariate from Design 1, and the analysis of difference scores. Note that once the Design is set up, it is trivially easy to incorporate this additional comparison in DeclareDesign. The Model, Inquiry and Data Strategy are unchanged from Design 1; we just add a new term to the Answer Strategy.
+The Cambridge reanalysis treated pretest and posttest scores as different levels of a dependent variable in an Analysis of Variance, where group was the between-subjects factor and time was the within-subjects factor. The intervention effect is then estimated from the interaction term. Mathematically, this is equivalent to a comparison of pretest/posttest difference scores for the intervention versus the control group (the time 2 score minus the time 1 score for each participant in the two groups). We can readily check the impact of this analytic decision using code that is included in the *pretest_posttest* function in the DeclareDesign vignette. (<https://declaredesign.org/r/designlibrary/articles/pretest_posttest.html>). This time our Design includes two alternative analyses of the same simulated data - the original regression with pretest as covariate from Design 1, and the analysis of difference scores. Note that once the Design is set up, it is trivially easy to incorporate this additional comparison in DeclareDesign. The Model, Inquiry and Data Strategy are unchanged from Design 1; we just add a new term to the Answer Strategy.
 
 ```{r changescore, warning =FALSE}
 # ------------------------------------------------------
@@ -493,7 +492,7 @@ ftab
 
 The summary in Table `r ntab` confirms that precision is greater (i.e., lower RMSE) and power is higher for the ANCOVA analysis than for the repeated measures ANOVA when there is a true intervention effect, but the difference is slight. In subsequent models, we use the ANCOVA analysis.
 
-### Design 4: Including multiple outcomes
+## Design 4: Including multiple outcomes
 
 The Cambridge group had administered some additional measures to participating children: two subtests from the Test of Word Reading Efficiency (TOWRE) were given at follow-up, and again at time 3, after a delay. They reported analyses of five outcome measures (NGRT, TOWRE word, TOWRE nonword at posttest; TOWRE word and TOWRE nonword at delayed posttest). Of these five analyses, just one showed a significant effect of intervention: a significantly larger improvement in the GraphoGame group on the TOWRE nonword subtest (*p* = .027) at immediate posttest. Neither of the TOWRE subtests differed between the intervention and control group at the delayed subtest after the school summer holiday. No adjustment for multiple comparisons was made.
 
@@ -625,9 +624,9 @@ Design4_diagnosis<-diagnose_designs(Design4_designs,sims=nsims)
 save(Design4_diagnosis,file=paste0("simulated_data/Design4_",nsims,".RData"))
 ```
 
-For this model, if we just look at the diagnosand data frame from _Design4_Diagnosis_, we find diagnosands that are similar to those in Design 1, because each individual outcome behaves like a single outcome. The multiple outcomes, however, introduce potential for an increase in the false positive rate through what is known in p-hacking - where a researcher selects *any* of the set of outcome measures as evidence for effectiveness. The greater the number of measures, the more opportunities for finding a significant result, even when the true effect size is zero.
+For this model, if we just look at the diagnosand data frame from *Design4_Diagnosis*, we find diagnosands that are similar to those in Design 1, because each individual outcome behaves like a single outcome. The multiple outcomes, however, introduce potential for an increase in the false positive rate through what is known in p-hacking - where a researcher selects *any* of the set of outcome measures as evidence for effectiveness. The greater the number of measures, the more opportunities for finding a significant result, even when the true effect size is zero.
 
-When modeling this situation, we have to decide what kind of selection might be made. Potentially, the researcher might be interested in any result that is statistically significant. However, that seems implausible, because it would include negative as well as positive results. In our simulation, we simulate p-hacking by assuming that the researcher selects the largest positive effect size, and disregards results that are opposite to prediction. We create a *p.hack* function which uses the simulations that are stored as part of _Design4_diagnosis_, and for each run we select the variable giving the most extreme positive result.
+When modeling this situation, we have to decide what kind of selection might be made. Potentially, the researcher might be interested in any result that is statistically significant. However, that seems implausible, because it would include negative as well as positive results. In our simulation, we simulate p-hacking by assuming that the researcher selects the largest positive effect size, and disregards results that are opposite to prediction. We create a *p.hack* function which uses the simulations that are stored as part of *Design4_diagnosis*, and for each run we select the variable giving the most extreme positive result.
 
 ```{r Des4analysis, echo=F}
 if(haveresults==1){
@@ -682,9 +681,9 @@ ftab<-set_caption(ftab,mycap)
 ftab
 ```
 
-The first eight rows of simulation results selected by the *p.hack* function are shown in Table `r ntab` for the case where the null hypothesis is true (_EffSize_ = 0). The inquiry indicates which of the five measures, a, b, c, d or e was selected as most extreme. If the five measures were uncorrelated, then each measure would have an independent probability of showing a positive significant effect (_p_ \< .05) of .025, and so the estimated false positive rate would be 1 - .975\^5, which is equivalent to `r 1-.975^5`. However, the more highly correlated the outcome measures are, the less the false positive rate will be inflated. We can categorise the p-value of the most positive result on each run as either 1 (i.e., significant at _p_ < .05) or zero (nonsignficant), to compute the false positive rate after p-hacking. For outcomes with the correlation structure used here, with significance counted only for positive effects, the probability of a false positive (i.e., a positive estimate with a _p_-value below .05 on at least one of five measures) is `r fprate4` when the true effect size is zero. Thus, in this case running five separate statistical tests on a set of correlated outcome measures, yields a small increase in the probability of falsely concluding that an effect exists when, in fact, there is no true effect.  
+The first eight rows of simulation results selected by the *p.hack* function are shown in Table `r ntab` for the case where the null hypothesis is true (*EffSize* = 0). The inquiry indicates which of the five measures, a, b, c, d or e was selected as most extreme. If the five measures were uncorrelated, then each measure would have an independent probability of showing a positive significant effect (*p* \< .05) of .025, and so the estimated false positive rate would be 1 - .975\^5, which is equivalent to `r 1-.975^5`. However, the more highly correlated the outcome measures are, the less the false positive rate will be inflated. We can categorise the p-value of the most positive result on each run as either 1 (i.e., significant at *p* \< .05) or zero (nonsignficant), to compute the false positive rate after p-hacking. For outcomes with the correlation structure used here, with significance counted only for positive effects, the probability of a false positive (i.e., a positive estimate with a *p*-value below .05 on at least one of five measures) is `r fprate4` when the true effect size is zero. Thus, in this case running five separate statistical tests on a set of correlated outcome measures, yields a small increase in the probability of falsely concluding that an effect exists when, in fact, there is no true effect.
 
-### Design 5: Modifying the selection of cases to match the Cambridge analyses
+## Design 5: Modifying the selection of cases to match the Cambridge analyses
 
 The Cambridge group reanalysed the data after dropping children from the intervention group who had not progressed beyond the mean level achieved on GraphoGame for the whole intervention group. These 95 intervention cases were then compared with the whole control group on a range of outcome measures. The rationale for this approach is that playing time was very variable, and some children may have used their time alone on the computer to do other activities. It was argued that it would be a fairer test to restrict consideration to children who had progressed far enough through the game to indicate that they had *"received sufficient independent and solitary exposure to the game to learn English phonics".*
 
@@ -764,11 +763,11 @@ ftab
 
 ```
 
-Table `r ntab` shows that the selection of cases based on Level creates upwardly biased estimates of the intervention effect when Level is correlated with the outcome measures (i.e., when _r_L.u2_ is greater than zero). When the null hypothesis is true, the estimates of effect size are `r tabDes5a$mean_estimate[tabDes5a$r_L.u2==.2][1]` and `r tabDes5a$mean_estimate[tabDes5a$r_L.u2==.4][1]` if correlation with the selection measure is .2 or .4 respectively. Note that when the null is true, then 'power' indicates the false positive rate, which should be around .05. The simulated data give values of `r tabDes5a$power[tabDes5a$r_L.u2==.2][1]` and `r tabDes5a$power[tabDes5a$r_L.u2==.4][1]` when the correlation with selection variable is .2 or .4 respectively.  
+Table `r ntab` shows that the selection of cases based on Level creates upwardly biased estimates of the intervention effect when Level is correlated with the outcome measures (i.e., when *r_L.u2* is greater than zero). When the null hypothesis is true, the estimates of effect size are `r tabDes5a$mean_estimate[tabDes5a$r_L.u2==.2][1]` and `r tabDes5a$mean_estimate[tabDes5a$r_L.u2==.4][1]` if correlation with the selection measure is .2 or .4 respectively. Note that when the null is true, then 'power' indicates the false positive rate, which should be around .05. The simulated data give values of `r tabDes5a$power[tabDes5a$r_L.u2==.2][1]` and `r tabDes5a$power[tabDes5a$r_L.u2==.4][1]` when the correlation with selection variable is .2 or .4 respectively.
 
-This simulation illustrates the importance of considering diagnosands that go beyond statistical power when evaluating designs. Design 4 gives high power estimates for the real effect of .2, but these are misleading, because of the upward bias in estimates of intervention effect. When we look at the coverage statistic, which is the probability that the confidence interval around an estimate contains the true value, we see that the estimates from this design are very poor indicators of the true effect. Another way of putting it would be to say that a design that gives upwardly biased estimates of the intervention effect will have a low rate of false negatives (i.e. high power), but only because it has a high rate of false positives (see also Figure 2, below). 
+This simulation illustrates the importance of considering diagnosands that go beyond statistical power when evaluating designs. Design 4 gives high power estimates for the real effect of .2, but these are misleading, because of the upward bias in estimates of intervention effect. When we look at the coverage statistic, which is the probability that the confidence interval around an estimate contains the true value, we see that the estimates from this design are very poor indicators of the true effect. Another way of putting it would be to say that a design that gives upwardly biased estimates of the intervention effect will have a low rate of false negatives (i.e. high power), but only because it has a high rate of false positives (see also Figure 2, below).
 
-### Design 6: Combining Designs 4 and 5
+## Design 6: Combining Designs 4 and 5
 
 In a final set of simulations, we combined Designs 4 and 5 to create simulations that corresponded to the Cambridge reanalysis, to consider the extent of bias introduced by the combination of multiple outcomes and participant selection. We focused just on the case where the null hypothesis was true and specified that the correlation between the selection variable and outcome variables is .2. For each run of this simulation, we again used the *p.hack* function to select the outcome variable that gives the largest effect size (from the five outcomes that are considered). Figure 2 shows the estimates of effect size that are obtained when the correct value of effect size is zero, for Design 2 (NFER analysis) and Design 6 (Cambridge reanalysis).
 
@@ -955,7 +954,7 @@ The phenomenon of variability in analyses of the same data is attracting increas
 
 ### Author Contributions
 
-DVMB and CH jointly: **Conceptualization; Writing - Original Draft, Review and Editing** DVMB: Methodology, Software, Visualization
+DVMB and CH jointly: Conceptualization; Writing - Original Draft, Review and Editing. DVMB: Methodology, Software, Visualization
 
 ### Conflict of interest
 
@@ -963,11 +962,11 @@ DVMB has no conflict of interest. CH is the founder and CEO of OxEd and Assessme
 
 ### Supplemental material
 
-R Markdown file to create the article and all analyses, including code that is not displayed in the article.
+The R Markdown file GGrmd.Rmd creates the article and all analyses, including code that is not displayed in the article.
 
 ### Prior material
 
-The submitted draft has been deposited as a preprint on Psyarxiv.
+The submitted draft has been deposited as a preprint on Psyarxiv, <https://osf.io/preprints/psyarxiv/vzg3e>.
 
 ### Data, materials, and online resources
 
@@ -977,9 +976,9 @@ The code to reproduce the analyses reported in this article is publicly availabl
 
 Ahmed, H., Wilson, A., Mead, N., Noble, H., Richardson, U., Wolpert, M. A., & Goswami, U. (2020). An evaluation of the efficacy of GraphoGame Rime for promoting English phonics knowledge in poor readers. *Frontiers in Education*, *5*. <https://www.frontiersin.org/articles/10.3389/feduc.2020.00132>
 
-Bell, M. L., Kenward, M. G., Fairclough, D. L., & Horton, N. J. (2013). Differential dropout and bias in randomised controlled trials: When it matters and when it may not. *British Medical Journal*, *346*, e8668. https://doi.org/10.1136/bmj.e8668
+Bell, M. L., Kenward, M. G., Fairclough, D. L., & Horton, N. J. (2013). Differential dropout and bias in randomised controlled trials: When it matters and when it may not. *British Medical Journal*, *346*, e8668. <https://doi.org/10.1136/bmj.e8668>
 
-Bishop, D. V. M. (2023). Using multiple outcomes in intervention studies: Improving power while controlling type I errors [version 3; peer review: 2 approved] (10:991). *F1000Research*. https://doi.org/10.12688/f1000research.73520.2
+Bishop, D. V. M. (2023). Using multiple outcomes in intervention studies: Improving power while controlling type I errors [version 3; peer review: 2 approved] (10:991). *F1000Research*. <https://doi.org/10.12688/f1000research.73520.2>
 
 Bishop, D. V. M., & Thompson, P. A. (2023). *Evaluating What Works: An Intuitive Guide to Intervention Research for Practitioners*. Chapman and Hall/CRC.
 
@@ -987,17 +986,17 @@ Blair, G., Cooper, J., Coppock, A., & Humphreys, M. (2019). Declaring and diagno
 
 Blair, G., Coppock, A., & Humphreys, M. (2023). *Research Design in the Social Sciences: Declaration, Diagnosis, and Redesign*. Princeton University Press. <https://book.declaredesign.org>
 
-Committee for Medicinal Products for Human Use (CHMP). (2019). Guideline on the investigation of subgroups in confirmatory clinical trials (EMA/CHMP/539146/2013). European Medicines Agency. https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-investigation-subgroups-confirmatory-clinical-trials_en.pdf
+Committee for Medicinal Products for Human Use (CHMP). (2019). Guideline on the investigation of subgroups in confirmatory clinical trials (EMA/CHMP/539146/2013). European Medicines Agency. <https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-investigation-subgroups-confirmatory-clinical-trials_en.pdf>
 
 Goswami, U., & East, M. (2000). Rhyme and analogy in beginning reading: Conceptual and methodological issues. *Applied Psycholinguistics*, *21*(1), 63--93. <https://doi.org/10.1017/S0142716400001041>
 
-Lawson, M. T., Herring, A. H., & Hemming, K. (2021). Multiple comparisons: A tutorial. Part 2: Understanding multiple comparisons. _BJOG: An International Journal of Obstetrics & Gynaecology_, _128_(9), 1432–1432. https://doi.org/10.1111/1471-0528.16705
+Lawson, M. T., Herring, A. H., & Hemming, K. (2021). Multiple comparisons: A tutorial. Part 2: Understanding multiple comparisons. *BJOG: An International Journal of Obstetrics & Gynaecology*, *128*(9), 1432--1432. <https://doi.org/10.1111/1471-0528.16705>
 
 McTigue, E. M., Solheim, O. J., Zimmer, W. K., & Uppstad, P. H. (2019). Critically reviewing GraphoGame across the world: Recommendations and cautions for research and implementation of computer‐assisted instruction for word‐reading acquisition. *Reading Research Quarterly*, *55*(1), 45--73. <https://doi.org/doi:10.1002/rrq.256>
 
-Montgomery, J. M., Nyhan, B., & Torres, M. (2018). How conditioning on posttreatment variables can ruin your experiment and what to do about it. *American Journal of Political Science*, *62*(3), 760–775. https://doi.org/10.1111/ajps.12357
+Montgomery, J. M., Nyhan, B., & Torres, M. (2018). How conditioning on posttreatment variables can ruin your experiment and what to do about it. *American Journal of Political Science*, *62*(3), 760--775. <https://doi.org/10.1111/ajps.12357>
 
-R Core Team (2023). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria.  URL https://www.R-project.org/.
+R Core Team (2023). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. URL <https://www.R-project.org/>.
 
 Schweinsberg, M., Feldman, M., Staub, N., van den Akker, O. R., van Aert, R. C. M., van Assen, M. A. L. M., Liu, Y., Althoff, T., Heer, J., Kale, A., Mohamed, Z., Amireh, H., Venkatesh Prasad, V., Bernstein, A., Robinson, E., Snellman, K., Amy Sommer, S., Otner, S. M. G., Robinson, D., ... Luis Uhlmann, E. (2021). Same data, different conclusions: Radical dispersion in empirical results when independent analysts operationalize and test the same hypothesis. *Organizational Behavior and Human Decision Processes*, *165*, 228--249. <https://doi.org/10.1016/j.obhdp.2021.02.003>
 
@@ -1005,6 +1004,6 @@ Shadish, W. R., Cook, T. D., & Campbell, D. T. (2002). *Experimental and quasi-e
 
 Silberzahn, R., Uhlmann, E. L., Martin, D. P., Anselmi, P., Aust, F., Awtrey, E., Bahník, Š., Bai, F., Bannard, C., Bonnier, E., Carlsson, R., Cheung, F., Christensen, G., Clay, R., Craig, M. A., Dalla Rosa, A., Dam, L., Evans, M. H., Flores Cervantes, I., ... Nosek, B. A. (2018). Many analysts, one data set: Making transparent how variations in analytic choices affect results. *Advances in Methods and Practices in Psychological Science*, *1*(3), 337--356. <https://doi.org/10.1177/2515245917747646>
 
-West, G., Snowling, M. J., Lervåg, A., Buchanan-Worster, E., Duta, M., Hall, A., McLachlan, H., & Hulme, C. (2021). Early language screening and intervention can be delivered successfully at scale: Evidence from a cluster randomized controlled trial. *Journal of Child Psychology and Psychiatry*, *62*(12), 1425–1434. https://doi.org/10.1111/jcpp.13415
+West, G., Snowling, M. J., Lervåg, A., Buchanan-Worster, E., Duta, M., Hall, A., McLachlan, H., & Hulme, C. (2021). Early language screening and intervention can be delivered successfully at scale: Evidence from a cluster randomized controlled trial. *Journal of Child Psychology and Psychiatry*, *62*(12), 1425--1434. <https://doi.org/10.1111/jcpp.13415>
 
 Worth, J., Nelson, J., Harland, J., Bernardinelli, D., & Styles, B. (2018). GraphoGame Rime: Evaluation report and executive summary. National Foundation for Educational Research. <https://www.nfer.ac.uk/publications/graphogame-rime-evaluation-report-and-executive-summary/>
