@@ -1,0 +1,124 @@
+---
+title: "MakeICCMultiplier"
+author: "Dorothy Bishop"
+date: "2024-06-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Creating lookup table for ICCs in clustered trials
+
+Design 2 takes into account clustering of data by classroom. In simulating data at the model specification stage, we first allocate a classroom to each participant, and then, at a second stage, generate pretest scores that have a specified ICC with classroom. However, in clustered intervention trials, it is the ICC for **posttest** data that is typically reported.  Given that there is not a perfect correlation between pretest and posttest data (*rho*), the ICC for pretest data will be higher than that in posttest data.  So we need to estimate an appropriate ICC to use in the simulation, assuming that we know the ICC for posttest data, but need the ICC for pretest data.  
+
+To create a lookup table, *ICCmultiplier.csv*, we use the same model as for Design 2, and compute values of *ICC~pre~* and *ICC~post~* on multiple runs, varying the value of the correlation between pretest and posttest, *rho*.  This gives estimates for a multiplication factor to convert values of *ICC~post~* into *ICC~pre~* for a given *rho*.
+
+
+
+### Design 2
+
+```{r libraries, echo=F, include=F}
+library(fishmethods) #for intracluster correlation from long form data
+library(DeclareDesign) 
+library(flextable)
+library(ggplot2)
+```
+First we use declare_model to specify the function, M. This is equivalent to the model for Design 2 in the main paper. We also specify estimand1 and estimand2 to correspond to the values of *ICC~pre~* and *ICC~post~* computed from simulated data.  
+
+```{r Model}
+
+myN <- 398 #N participants from Graphogame; 
+nclasses <- 53 #we use value from Graphogame study
+gain_t1t2 <- 1 #doesn't affect results; included for realistic estimates of gain
+sd2 <- 1
+estICCpre <- .15  #will be varied with redesign
+myrho <- .6 #will be varied with redesign
+
+M <-
+  declare_model(
+    N = myN,
+    class = sample(1:nclasses, N, replace=TRUE),
+    u_t1 = draw_normal_icc(
+      mean = 0,
+      clusters = class,
+      ICC = estICCpre 
+    ),
+    u_t2 = correlate(given = u_t1, rho = myrho, rnorm, mean = gain_t1t2, sd = sd2), 
+    Y_t1 = u_t1)
+
+estimand1 <- declare_inquiry(iccpre = clus.rho(popchar=u_t1, cluster = class, type = 3, est = 0, nboot = 500)) 
+estimand2 <- declare_inquiry(iccpost = clus.rho(popchar=u_t2, cluster = class, type = 3, est = 0, nboot = 500))
+
+```
+
+    
+```{r createlookuptable}
+#This chunk creates the lookup table, ICCrawvalues.csv
+#It is slow to run, so if you already have the table, you should skip this step and just read in the saved version, by setting havetable to 1.
+
+havetable<-1
+if(havetable==0){ 
+  #Make data frame to inspect across range of ICC values for pretest
+  
+  nsims <- 2000 # 2000 simulations per model sufficient to get good estimate; use lower number to test script
+  design <- M + estimand1 + estimand2
+  designs <- redesign(design, estICCpre = c(.1,.15,.2,.25,.3,.35,.4,.45,.5,.55,.6), myrho= c(.1, .2, .3,.4,.5,.6,.7, .8,.9))
+  
+  #Creates list of designs with all permutations of estICCpre and myrho. Note that some of these values are very unrealistic. In practice, you'd be unlikely to find values of rho below .5, or ICC values greater than .3. 
+  
+  Design_diagnosis <- diagnose_designs(designs,sims=nsims)
+  
+  simdata <- Design_diagnosis$simulations_df #Big data frame with simulated data from designs with all combinations of parameters, and both estimands
+  
+  mytab <- aggregate(simdata$value,by=list(simdata$estICCpre,simdata$myrho,simdata$inquiry),FUN=mean)
+  
+  ICClookup <- pivot_wider(mytab,names_from=Group.3,values_from=x)
+  names(ICClookup)<-c('givenICCpre','rho', 'MeanICCPost','MeanICCPre')
+
+write.csv(ICClookup,"ICClookup.csv",row.names=F)
+#ICClookup shows for each combination of estICCpre and myrho the mean values of ICCpost and ICCpre obtained in all the runs of the simulation. We expect meanICCpre to be close to estICCpre, and meanICCpost to be lower. 
+}
+```
+
+Plot ICClookup to see relationship between mean estimates of *ICC~pre~* and *ICC~post~* at any given value of *rho*.
+
+
+```{r plottable}
+if(havetable==1){
+  ICClookup <- read.csv("ICClookup.csv")
+}
+ggplot(data=ICClookup, aes(x=MeanICCPre,y=MeanICCPost,color=as.factor(rho)))+
+  geom_point()+
+  xlab('ICC pretest')+
+  ylab('ICC posttest')+
+  ggtitle('Relationship between pretest and posttest ICC, depending on rho')
+
+```
+  
+This figure illustrates how when *rho* is low, there is little relationship with the ICC at posttest, but as *rho* increases, a linear relationship between *ICC~pretest~* and *ICC~posttest~* emerges. This means that we can use a simple multiplier to estimate *ICC~pretest~* if *ICC~posttest~* and *rho* are known.  This multiplier is computed in the next step.  
+
+
+```{r multiplierlookup}
+ICClookup$ratio <- ICClookup$MeanICCPre/ICClookup$MeanICCPost
+ICCmultiplier <- aggregate(ICClookup$ratio,by=list(ICClookup$rho),FUN=mean)
+names(ICCmultiplier)<-c('rho','multiplier')
+
+ICCmultiplier<-ICCmultiplier[ICCmultiplier$rho>.2,] #at low values of rho, multiplier is unstable and very large because there is no relationship between pre and posttest values. Since there is no point in simulating data in this case, we exclude values of .2 or less.
+
+ggplot(data=ICCmultiplier, aes(x=rho,y=multiplier))+
+  geom_point()
+
+ICCmultiplier$multiplier <- round(ICCmultiplier$multiplier,2)
+
+ftab<-flextable(ICCmultiplier)
+mycap<-paste0("Lookup table: Multiplier to create pretest ICC from posttest ICC")
+ftab<-set_caption(ftab,mycap)
+ftab
+```
+
+How to use the Lookup table.  Suppose you know that rho is .6 and *ICC~posttest~* is .1.  Then *ICC~pretest~* can be estimated as .1 * 2.85 = .285. This is the value that should be entered into the model as *estICCpre*.  
+
+
+We thank Macartan Humphreys for advice on this simulation, but any errors are the author's.
